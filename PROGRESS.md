@@ -38,19 +38,31 @@ device/simulator).
 
 ## NEXT SESSION — resume here
 
-M2 is DONE (all verified on emulator 2026-07-11, incl. ALL CLEAR popup +
-confetti + settings sheet). Continue with M3 in order: quest JSON schema +
-strict parser + validator, bundled starter pack, stage play, map screen,
-GitHub fetch, countdown badge.
+M2 and M3 are DONE (device-verified 2026-07-12). Continue with M4:
+menu/settings polish, audio + haptics, theme seam polish, golden tests,
+perf pass, icons/store metadata, README/CONTRIBUTING, release builds.
+Notes: quest fetch will 404 until the repo is pushed to
+github.com/fucad/block_puzzle (by design, silent); lose-screen and 80%
+banner visuals still unseen on device — eyeball during M4 play-testing.
 
 ## M3 — Quest mode
 
-- [ ] Quest JSON schema + strict parser + validator CLI/test
-- [ ] Bundled starter pack (author ~15 stages: mix of score & gem goals, a few hard)
-- [ ] Stage play: pre-placed boards, gem collection, progress UI, 80% banner
-- [ ] Win/lose screens; quest map screen with path, hard nodes, progression
-- [ ] GitHub fetch + cache + release-date gating + checksum verify + offline fallback
-- [ ] Main-menu countdown badge
+- [x] Quest JSON schema + strict parser + validator CLI/test
+      (tool/validate_quests.dart, --update fixes checksums;
+      quest_content_test keeps shipped content green)
+- [x] Bundled starter pack (15 stages, score+gem goals, 4 hard, 2 pinned
+      seeds; ships as assets straight from content/quests/)
+- [x] Stage play: pre-placed boards, gem collection, progress UI
+      (gem stage s03 + score stage s04 verified on emulator; 80% banner
+      built — visual check happens in normal play)
+- [x] Win/lose screens; quest map screen with path, hard nodes, progression
+      (win flow + map advance verified on device; "So Close!" lose screen
+      controller-tested, visual pending normal play)
+- [x] GitHub fetch + cache + release-date gating + checksum verify +
+      offline fallback (unit-tested with fake fetchers; real fetch 404s
+      harmlessly until the repo is pushed)
+- [x] Main-menu countdown badge (unit-tested; invisible now — correct,
+      since no unreleased pack exists in the manifest yet)
 
 ## M4 — Polish & release prep
 
@@ -142,6 +154,27 @@ GitHub fetch, countdown badge.
 - Emulator/adb verification recipes captured in docs/DEV_NOTES.md.
 - Session ended mid slice-D device verification at user request; all
   code committed on `dev`, working tree clean, 43/43 tests green.
+
+### 2026-07-12 — M3 quest mode (all four slices)
+- Board-string format (`.`/digits/gem letters) promoted from the test
+  helper into lib/models/board_strings.dart — quest packs, tests, and
+  docs all share one human-authorable layout syntax.
+- Strict parsing (models) is separated from playability validation
+  (lib/services/quest_validation.dart: no pre-completed lines, ≥20 empty
+  cells, satisfiable gem goals, sane score targets, checksums) — the
+  validator CLI, the content test, and downloaded-pack vetting reuse it.
+- GitHub-as-backend: single config constant (fucad/block_puzzle),
+  content-addressed pack cache in SharedPreferences keyed by sha256,
+  12h refresh throttle stamped in SaveData, next-pack pre-caching.
+  UI never waits on network; all failures degrade to bundled+cached.
+- Quest attempts are NOT persisted mid-stage (retry restarts the
+  layout) — matches the reference; only completion is saved.
+- Win beats lose when the goal lands on the final possible move.
+- tool/simulate.dart gained --stage <pack.json>:<id> for quest replay;
+  used it to plan the on-device verification (s03 one-move win).
+- Device-verified via adb run-as save injection (recipe worth reusing):
+  map render/serpentine/hard nodes/progression, gem blocks + counter,
+  score progress pill, Level Complete flow, map advance.
 
 ### 2026-07-11 — Reference screenshots received
 - 13 Block Blast screenshots supplied; feature observations captured in

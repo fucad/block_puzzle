@@ -5,6 +5,7 @@ import '../state/classic_game_controller.dart';
 import '../state/providers.dart';
 import '../state/quest_providers.dart';
 import 'classic_screen.dart';
+import 'quest_map_screen.dart';
 
 /// Main menu: logo, tagline, Quest (arrives in M3) and Classic. No ads,
 /// no "More Games", no upsells — ever (PURPOSE.md).
@@ -77,9 +78,20 @@ class MainMenuScreen extends ConsumerWidget {
                   label: 'Quest',
                   icon: Icons.flag_rounded,
                   color: const Color(0xFFF2994A),
-                  // Enabled with the quest map screen (M3 stage play).
-                  onPressed: null,
-                  trailing: 'soon',
+                  onPressed:
+                      ref
+                              .watch(questCatalogProvider)
+                              .value
+                              ?.playable
+                              .isNotEmpty ??
+                          false
+                      ? () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const QuestMapScreen(),
+                          ),
+                        )
+                      : null,
                   badge: _questCountdown(ref),
                 ),
                 const SizedBox(height: 16),
@@ -124,7 +136,6 @@ class _MenuButton extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.onPressed,
-    this.trailing,
     this.badge,
   });
 
@@ -132,7 +143,6 @@ class _MenuButton extends StatelessWidget {
   final IconData icon;
   final Color color;
   final VoidCallback? onPressed;
-  final String? trailing;
   final String? badge;
 
   @override
@@ -162,13 +172,6 @@ class _MenuButton extends StatelessWidget {
                 color: Colors.white,
               ),
             ),
-            if (trailing != null) ...[
-              const SizedBox(width: 10),
-              Text(
-                trailing!,
-                style: const TextStyle(color: Colors.white70, fontSize: 14),
-              ),
-            ],
           ],
         ),
       ),

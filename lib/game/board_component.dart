@@ -5,6 +5,7 @@ import 'package:flame/components.dart';
 import 'package:flutter/painting.dart' show HSVColor;
 
 import '../models/board.dart';
+import '../models/game_theme.dart';
 import 'block_painter.dart';
 import 'block_puzzle_game.dart';
 import 'effects.dart';
@@ -75,6 +76,9 @@ class BoardComponent extends PositionComponent
             ),
             Paint()..color = theme.emptyCell,
           );
+        } else if (occupant.gem != null) {
+          paintBlock(canvas, rect, gemBlockGold);
+          _paintGem(canvas, rect, gemColors[occupant.gem]!);
         } else {
           paintBlock(canvas, rect, theme.blockColor(occupant.colorId));
         }
@@ -105,8 +109,44 @@ class BoardComponent extends PositionComponent
       );
     }
 
+    _renderPreviewGhost(canvas, preview, cell);
+  }
+
+  /// Eight-point star, the quest gem sitting inside its gold block.
+  void _paintGem(Canvas canvas, Rect cellRect, Color color) {
+    final center = cellRect.center;
+    final outer = cellRect.shortestSide * 0.30;
+    final inner = outer * 0.45;
+    final path = Path();
+    for (var i = 0; i < 16; i++) {
+      final radius = i.isEven ? outer : inner;
+      final angle = i * pi / 8 - pi / 2;
+      final point = Offset(
+        center.dx + radius * cos(angle),
+        center.dy + radius * sin(angle),
+      );
+      i == 0
+          ? path.moveTo(point.dx, point.dy)
+          : path.lineTo(point.dx, point.dy);
+    }
+    path.close();
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = const Color(0x55000000)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
+    );
+    canvas.drawPath(path, Paint()..color = color);
+    canvas.drawCircle(
+      center.translate(-outer * 0.25, -outer * 0.25),
+      outer * 0.16,
+      Paint()..color = const Color(0xAAFFFFFF),
+    );
+  }
+
+  void _renderPreviewGhost(Canvas canvas, DragPreview preview, double cell) {
     // Ghost: the piece at 45% opacity on its snapped cells.
-    final color = theme.blockColor(preview.piece.colorId);
+    final color = game.theme.blockColor(preview.piece.colorId);
     for (final (r, c) in preview.piece.cells) {
       final rect = Rect.fromLTWH(
         (preview.col + c) * cell,

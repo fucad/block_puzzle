@@ -1,5 +1,19 @@
 import 'dart:ui';
 
+import 'cell.dart';
+
+/// Gem tints are semantic (shared by all themes' HUDs and boards).
+const Map<GemColor, Color> gemColors = {
+  GemColor.red: Color(0xFFE53935),
+  GemColor.blue: Color(0xFF29B6F6),
+  GemColor.purple: Color(0xFFCE5FFF),
+  GemColor.yellow: Color(0xFFFFD835),
+  GemColor.green: Color(0xFF66DD66),
+};
+
+/// Blocks that carry a gem render in gold regardless of theme palette.
+const Color gemBlockGold = Color(0xFFD9A441);
+
 /// Visual skin for the board and blocks. All rendering colors come from
 /// here so new themes are pure data (a contribution target — never locked
 /// or paywalled). Ship one polished default now.
