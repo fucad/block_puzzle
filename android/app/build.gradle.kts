@@ -7,7 +7,9 @@ plugins {
 android {
     namespace = "games.adfree.block_puzzle"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    // Pinned to a locally intact NDK; the flutter.ndkVersion default (28.2)
+    // exists on this machine only as a corrupted, empty download.
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

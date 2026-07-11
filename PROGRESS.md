@@ -23,12 +23,16 @@ device/simulator).
 
 ## M2 — Classic mode playable
 
-- [ ] Board rendering + drag-and-drop with ghost preview and would-clear highlight
-- [ ] Tray of 3, refill logic
+- [~] Board rendering + drag-and-drop with ghost preview and would-clear
+      highlight (all built; drag/ghost/snap/bounce verified on emulator —
+      would-clear glow still needs visual verification with a near-full line)
+- [x] Tray of 3, refill logic
 - [ ] Line-clear / multi-line / all-clear effects at 60fps
 - [ ] Combo popups + praise text + board glow
-- [ ] Score HUD, high score persistence, game over → Combo Master summary → retry
-- [ ] Resume in-progress classic run after app kill
+- [~] Score HUD, high score persistence, game over → Combo Master summary → retry
+      (HUD + high score + placeholder game-over dialog done; Combo Master
+      summary screen pending)
+- [x] Resume in-progress classic run after app kill (verified via force-stop)
 
 ## M3 — Quest mode
 
@@ -95,6 +99,22 @@ device/simulator).
   determinism over 60 greedy moves, save round-trips). No simulator run —
   M1 is pure logic with no UI; first device verification lands with M2.
 - Nothing committed yet (commit only when asked).
+
+### 2026-07-11 — M2 slice A/B (state layer + Flame play area)
+- User directive: commit frequently after each verified chunk; no pushing.
+  Working on branch `dev` off main.
+- Persistence: single JSON document in shared_preferences. A save that
+  fails to parse (corruption or future schema) is copied to a quarantine
+  key and defaults are used — never silently clobbered.
+- Flame layer design: components are added directly to the FlameGame root
+  (no camera/world), so canvas coords == widget pixels; geometry math is
+  a pure class (BoardGeometry). BoardComponent renders straight from the
+  engine GameState each frame; TrayPieceComponent handles dragging (piece
+  floats 1.6 cells above the finger at full board scale, per reference
+  UX). Rules never enter the Flame layer; placements round-trip through
+  ClassicGameController and state flows back via ref.listen → syncState.
+- Toolchain fix: local NDK 28.2 download was corrupt (empty dir), so
+  android/app pins ndkVersion to the intact 27.0.12077973.
 
 ### 2026-07-11 — Reference screenshots received
 - 13 Block Blast screenshots supplied; feature observations captured in
