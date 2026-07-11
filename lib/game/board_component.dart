@@ -1,15 +1,21 @@
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flame/components.dart';
+import 'package:flutter/painting.dart' show HSVColor;
 
 import '../models/board.dart';
 import 'block_painter.dart';
 import 'block_puzzle_game.dart';
+import 'effects.dart';
 
 /// Renders the 8×8 board every frame straight from game.state: background,
-/// settled cells, would-clear line glow, and the snapped ghost preview.
+/// settled cells, combo glow frame, would-clear line glow, and the snapped
+/// ghost preview.
 class BoardComponent extends PositionComponent
     with HasGameReference<BlockPuzzleGame> {
+  double _time = 0;
+
   @override
   Future<void> onLoad() async {
     position = Vector2(
@@ -20,9 +26,34 @@ class BoardComponent extends PositionComponent
   }
 
   @override
+  void update(double dt) => _time += dt;
+
+  @override
   void render(Canvas canvas) {
     final theme = game.theme;
     final cell = game.geometry.cell;
+
+    // Combo streak glow around the frame: gold when warm, hue-cycling
+    // rainbow when hot (reference UX).
+    final combo = game.state.combo;
+    if (combo >= comboGlowMin) {
+      final rainbow = combo >= comboRainbowMin;
+      final glowColor = rainbow
+          ? HSVColor.fromAHSV(1, (_time * 160) % 360, 0.7, 1).toColor()
+          : Color(0xFFF2C94C).withValues(alpha: 0.7 + 0.3 * sin(_time * 5));
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(-8, -8, size.x + 16, size.y + 16),
+          const Radius.circular(14),
+        ),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 10
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10)
+          ..color = glowColor,
+      );
+    }
+
     final boardPaint = Paint()..color = theme.boardBackground;
     canvas.drawRRect(
       RRect.fromRectAndRadius(

@@ -21,10 +21,18 @@ class ClassicGameController extends Notifier<GameState?> {
 
   bool get isGameOver => state != null && GameEngine.isGameOver(state!);
 
+  /// Bug-reproduction hook: `flutter run --dart-define=SEED=42` pins every
+  /// new classic run to that seed. 0 (the default) means "roll randomly".
+  static const int _pinnedSeed = int.fromEnvironment('SEED');
+
   /// Starts a fresh run. [seed] is injectable for tests/reproduction;
   /// normally each run rolls its own from the wall clock.
   void startNew({int? seed}) {
-    final s = seed ?? DateTime.now().microsecondsSinceEpoch;
+    final s =
+        seed ??
+        (_pinnedSeed != 0
+            ? _pinnedSeed
+            : DateTime.now().microsecondsSinceEpoch);
     _seed = s;
     final fresh = GameEngine.newGame(s);
     state = fresh;

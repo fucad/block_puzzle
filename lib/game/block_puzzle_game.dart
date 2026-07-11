@@ -11,6 +11,7 @@ import '../systems/line_clear.dart';
 import '../systems/placement.dart';
 import 'board_component.dart';
 import 'board_geometry.dart';
+import 'effects.dart';
 import 'tray_piece_component.dart';
 
 /// What the currently dragged piece would do if dropped where it hovers.
@@ -115,6 +116,8 @@ class BlockPuzzleGame extends FlameGame {
     final piece = pieceById[state.tray[trayIndex]!]!;
     final (row, col) = geometry.snapCell(pieceTopLeft);
     if (!canPlace(state.board, piece, row, col)) return null;
-    return onPlace(trayIndex, row, col);
+    final outcome = onPlace(trayIndex, row, col);
+    if (outcome != null) spawnPlacementEffects(this, outcome.events);
+    return outcome;
   }
 }
