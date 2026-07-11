@@ -41,6 +41,10 @@ class SaveDataNotifier extends Notifier<SaveData> {
     );
   }
 
+  /// Stamps the quest-fetch throttle (see questCatalogProvider).
+  void markQuestFetch(int epochMs) =>
+      _update(state.copyWith(lastQuestFetchEpochMs: epochMs));
+
   void markStageCompleted(String packId, String stageId) {
     final completed = {
       for (final entry in state.questCompleted.entries)

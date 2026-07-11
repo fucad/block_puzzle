@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../state/classic_game_controller.dart';
 import '../state/providers.dart';
+import '../state/quest_providers.dart';
 import 'classic_screen.dart';
 
 /// Main menu: logo, tagline, Quest (arrives in M3) and Classic. No ads,
@@ -76,9 +77,10 @@ class MainMenuScreen extends ConsumerWidget {
                   label: 'Quest',
                   icon: Icons.flag_rounded,
                   color: const Color(0xFFF2994A),
-                  // Enabled in M3 with the quest map + countdown badge.
+                  // Enabled with the quest map screen (M3 stage play).
                   onPressed: null,
                   trailing: 'soon',
+                  badge: _questCountdown(ref),
                 ),
                 const SizedBox(height: 16),
                 _MenuButton(
@@ -107,6 +109,15 @@ class MainMenuScreen extends ConsumerWidget {
   }
 }
 
+/// "Nd Nh" until the next quest pack unlocks (reference: corner ribbon).
+String? _questCountdown(WidgetRef ref) {
+  final next = ref.watch(questCatalogProvider).value?.nextUpcoming?.releaseDate;
+  if (next == null) return null;
+  final left = next.difference(DateTime.now().toUtc());
+  if (left.isNegative) return null;
+  return '${left.inDays}d ${left.inHours % 24}h';
+}
+
 class _MenuButton extends StatelessWidget {
   const _MenuButton({
     required this.label,
@@ -114,6 +125,7 @@ class _MenuButton extends StatelessWidget {
     required this.color,
     required this.onPressed,
     this.trailing,
+    this.badge,
   });
 
   final String label;
@@ -121,10 +133,11 @@ class _MenuButton extends StatelessWidget {
   final Color color;
   final VoidCallback? onPressed;
   final String? trailing;
+  final String? badge;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    final button = SizedBox(
       width: 260,
       height: 64,
       child: FilledButton(
@@ -159,6 +172,32 @@ class _MenuButton extends StatelessWidget {
           ],
         ),
       ),
+    );
+    if (badge == null) return button;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        button,
+        Positioned(
+          top: -10,
+          left: -10,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: const Color(0xFFE53935),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              badge!,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
