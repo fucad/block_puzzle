@@ -1,5 +1,5 @@
 name: block_puzzle
-description: "A new Flutter project."
+description: "Open-source, ad-free block puzzle game. Free forever."
 publish_to: 'none'
 version: 0.1.0+1
 
@@ -7,10 +7,12 @@ environment:
   sdk: ^3.12.1
 
 dependencies:
+  crypto: ^3.0.7
   flame: ^1.37.0
   flutter:
     sdk: flutter
   flutter_riverpod: ^3.3.2
+  http: ^1.6.0
   shared_preferences: ^2.5.5
 
 dev_dependencies:
@@ -20,3 +22,9 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  # Quest content ships bundled so first launch works fully offline; the
+  # same files are what raw.githubusercontent.com serves after a merge.
+  assets:
+    - content/quests/
+    - content/quests/packs/
