@@ -1,0 +1,57 @@
+# SAVE_MODEL.md — Persisted data schema
+
+All persistence goes through one service layer (`lib/services/`, M2) and
+serializes the versioned `SaveData` model (`lib/models/save_data.dart`).
+Storage medium: a single JSON document. Cached quest packs are separate
+files on disk, NOT inside the save (see CONTRIBUTING_QUESTS.md / M3); the
+save only stores fetch metadata.
+
+Any schema change bumps `version` and adds a migration note here. Loading an
+unknown version throws — callers must handle it explicitly rather than
+silently discarding progress.
+
+## Version 1
+
+```jsonc
+{
+  "version": 1,
+  "settings": {
+    "soundOn": true,
+    "hapticsOn": true,
+    "themeId": "default"
+  },
+  "classicHighScore": 0,       // all-time best classic score
+  "allTimeBestCombo": 0,       // best combo streak ever (Combo Master screen)
+  "classicRun": null,          // in-progress classic run, or null
+  "classicRunSeed": "12345",   // seed that run started from (string int64)
+  "questCompleted": {          // packId -> sorted stage ids completed
+    "starter": ["s01", "s02"]
+  },
+  "lastQuestFetchEpochMs": null // throttle for the GitHub manifest fetch
+}
+```
+
+### `classicRun` (GameState snapshot)
+
+```jsonc
+{
+  "board": [null, {"c": 3}, {"c": 5, "g": "red"}, ...],  // 64 cells row-major
+  "tray": ["line3h", null, "square2"],  // null = slot already played
+  "rngState": "-8423581294942912",      // GameRng state (string int64)
+  "score": 1240,
+  "combo": 3,
+  "roundBestCombo": 7,
+  "gems": {"red": 1}                    // collected this run (quest only)
+}
+```
+
+Notes:
+- Board cell: `null` = empty; otherwise `c` = theme palette color index,
+  optional `g` = gem color name (quest boards only).
+- 64-bit integers (`rngState`, `classicRunSeed`) are stored as **strings**
+  because JSON tooling commonly round-trips numbers through doubles, which
+  corrupts values above 2^53.
+- Resuming a run needs no replay: board, tray, and RNG state fully determine
+  the future. The seed is kept only for bug reproduction.
+- Quest progress is a set of completed stage ids per pack, so packs can be
+  extended without migrations.
