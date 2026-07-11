@@ -23,16 +23,32 @@ device/simulator).
 
 ## M2 — Classic mode playable
 
-- [~] Board rendering + drag-and-drop with ghost preview and would-clear
-      highlight (all built; drag/ghost/snap/bounce verified on emulator —
-      would-clear glow still needs visual verification with a near-full line)
+- [x] Board rendering + drag-and-drop with ghost preview and would-clear
+      highlight (verified on emulator incl. mid-drag glow screenshot)
 - [x] Tray of 3, refill logic
-- [ ] Line-clear / multi-line / all-clear effects at 60fps
-- [ ] Combo popups + praise text + board glow
-- [~] Score HUD, high score persistence, game over → Combo Master summary → retry
-      (HUD + high score + placeholder game-over dialog done; Combo Master
-      summary screen pending)
+- [~] Line-clear / multi-line / all-clear effects at 60fps (built; single
+      clear verified on device — particle burst, ALL CLEAR popup/confetti,
+      and a 60fps profile pass still need eyeballing → see NEXT SESSION)
+- [~] Combo popups + praise text + board glow (built + code-reviewed;
+      needs an on-device combo ≥2 to verify visually → see NEXT SESSION)
+- [x] Score HUD, high score persistence, game over → Combo Master summary → retry
+      (flow covered by widget test classic_flow_test.dart; settings sheet
+      with sound/haptics/reset/about wired from the classic HUD gear)
 - [x] Resume in-progress classic run after app kill (verified via force-stop)
+
+## NEXT SESSION — resume here
+
+1. Finish M2 visual verification (~15 min, recipe in docs/DEV_NOTES.md):
+   `adb shell pm clear games.adfree.block_puzzle`, run with
+   `--dart-define=SEED=125`, tap Classic (540,1717), then:
+   - line5h (slot1): swipe (540,1830)→(350,1613) 700ms
+   - line3h (slot0): swipe (180,1830)→(857,1613) 700ms and screenshot at
+     +0.2s / +0.5s — expect row clear burst, ALL CLEAR +300 popup, confetti.
+   - tap the gear (top right) → screenshot settings sheet.
+   - For combo popups: keep clearing (sim tool plans moves), or accept
+     during normal play.
+   - Flip the two [~] boxes above to [x] when seen.
+2. Then start M3 (quest mode): JSON schema + parser + validator first.
 
 ## M3 — Quest mode
 
@@ -115,6 +131,24 @@ device/simulator).
   ClassicGameController and state flows back via ref.listen → syncState.
 - Toolchain fix: local NDK 28.2 download was corrupt (empty dir), so
   android/app pins ndkVersion to the intact 27.0.12077973.
+
+### 2026-07-11 — M2 slice C/D (effects + summary/settings), session end
+- Effects layer (lib/game/effects.dart): per-cell bursts + line sweeps,
+  praise ladder (Good!→Unbelievable!), Combo N / ALL CLEAR popups,
+  confetti, and a combo glow frame (gold ≥3, rainbow ≥6) — visual tuning
+  constants live there, rule constants stay in game_constants.dart.
+- Verified on emulator with SEED=42: offline sim (tool/simulate.dart)
+  matched the device move for move; would-clear glow + row clear + score
+  confirmed by screenshot. Particle/popup visuals still pending (timing;
+  see NEXT SESSION).
+- Combo Master summary replaces the placeholder dialog (game over →
+  900ms effects grace → summary → play again/menu), settings sheet
+  (sound/haptics toggles persisted, reset-progress with confirm, about).
+  Flow covered by a widget test; note: pumpAndSettle hangs with a live
+  GameWidget, use fixed pumps.
+- Emulator/adb verification recipes captured in docs/DEV_NOTES.md.
+- Session ended mid slice-D device verification at user request; all
+  code committed on `dev`, working tree clean, 43/43 tests green.
 
 ### 2026-07-11 — Reference screenshots received
 - 13 Block Blast screenshots supplied; feature observations captured in

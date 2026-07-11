@@ -7,6 +7,8 @@ import '../game/block_puzzle_game.dart';
 import '../models/game_state.dart';
 import '../state/classic_game_controller.dart';
 import '../state/providers.dart';
+import 'combo_master_screen.dart';
+import 'settings_sheet.dart';
 
 /// Classic mode: HUD (high score, current score, settings) over the Flame
 /// play area. Rules live in the engine; this screen only wires state to
@@ -46,43 +48,24 @@ class _ClassicScreenState extends ConsumerState<ClassicScreen> {
   void _onStateChanged(GameState? next) {
     if (next == null) return;
     _game.syncState(next);
-    if (!_gameOverShown && ref.read(classicGameProvider.notifier).isGameOver) {
+    if (ref.read(classicGameProvider.notifier).isGameOver) {
+      if (_gameOverShown) return;
       _gameOverShown = true;
-      _showGameOver(next);
-    }
-  }
-
-  Future<void> _showGameOver(GameState finished) async {
-    // Placeholder until the Combo Master summary flow (M2 final slice).
-    final restart = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('Game over'),
-        content: Text(
-          'Score ${finished.score}\n'
-          'Best combo this round: ${finished.roundBestCombo}',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Menu'),
+      // Let the last clear's effects play before the summary takes over.
+      Future.delayed(const Duration(milliseconds: 900), () {
+        if (!mounted) return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ComboMasterScreen(
+              score: next.score,
+              roundBestCombo: next.roundBestCombo,
+            ),
           ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Play again'),
-          ),
-        ],
-      ),
-    );
-    if (!mounted) return;
-    final controller = ref.read(classicGameProvider.notifier);
-    controller.clearFinishedRun();
-    if (restart == true) {
-      _gameOverShown = false;
-      controller.startNew();
+        );
+      });
     } else {
-      Navigator.pop(context);
+      _gameOverShown = false; // a fresh run arrived (retry flow)
     }
   }
 
@@ -132,10 +115,9 @@ class _ClassicScreenState extends ConsumerState<ClassicScreen> {
                     ),
                     const Spacer(),
                     IconButton(
-                      // Settings sheet lands with the polish slice.
-                      onPressed: null,
+                      onPressed: () => showSettingsSheet(context),
                       icon: const Icon(Icons.settings),
-                      color: Colors.white38,
+                      color: Colors.white70,
                     ),
                   ],
                 ),
