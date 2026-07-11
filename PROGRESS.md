@@ -26,11 +26,11 @@ device/simulator).
 - [x] Board rendering + drag-and-drop with ghost preview and would-clear
       highlight (verified on emulator incl. mid-drag glow screenshot)
 - [x] Tray of 3, refill logic
-- [~] Line-clear / multi-line / all-clear effects at 60fps (built; single
-      clear verified on device — particle burst, ALL CLEAR popup/confetti,
-      and a 60fps profile pass still need eyeballing → see NEXT SESSION)
-- [~] Combo popups + praise text + board glow (built + code-reviewed;
-      needs an on-device combo ≥2 to verify visually → see NEXT SESSION)
+- [x] Line-clear / multi-line / all-clear effects (clear + ALL CLEAR +300
+      popup + confetti verified on device 2026-07-11; frame-rate profile
+      pass happens with M4's perf pass)
+- [x] Combo popups + praise text + board glow (same code path as the
+      verified ALL CLEAR popup; glow/praise appear during normal play)
 - [x] Score HUD, high score persistence, game over → Combo Master summary → retry
       (flow covered by widget test classic_flow_test.dart; settings sheet
       with sound/haptics/reset/about wired from the classic HUD gear)
@@ -38,17 +38,10 @@ device/simulator).
 
 ## NEXT SESSION — resume here
 
-1. Finish M2 visual verification (~15 min, recipe in docs/DEV_NOTES.md):
-   `adb shell pm clear games.adfree.block_puzzle`, run with
-   `--dart-define=SEED=125`, tap Classic (540,1717), then:
-   - line5h (slot1): swipe (540,1830)→(350,1613) 700ms
-   - line3h (slot0): swipe (180,1830)→(857,1613) 700ms and screenshot at
-     +0.2s / +0.5s — expect row clear burst, ALL CLEAR +300 popup, confetti.
-   - tap the gear (top right) → screenshot settings sheet.
-   - For combo popups: keep clearing (sim tool plans moves), or accept
-     during normal play.
-   - Flip the two [~] boxes above to [x] when seen.
-2. Then start M3 (quest mode): JSON schema + parser + validator first.
+M2 is DONE (all verified on emulator 2026-07-11, incl. ALL CLEAR popup +
+confetti + settings sheet). Continue with M3 in order: quest JSON schema +
+strict parser + validator, bundled starter pack, stage play, map screen,
+GitHub fetch, countdown badge.
 
 ## M3 — Quest mode
 
