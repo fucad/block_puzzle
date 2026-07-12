@@ -172,6 +172,18 @@ lose-screen/80%-banner visual eyeballing during play, a CI workflow
 - Session ended mid slice-D device verification at user request; all
   code committed on `dev`, working tree clean, 43/43 tests green.
 
+### 2026-07-12 — Privacy, issue templates, fucad splash
+- PRIVACY.md ("we collect nothing", store-submittable via its GitHub
+  URL) + the same policy in-app: Settings → Privacy dialog, offline.
+- Issue templates: bug report (asks for repro seed), quest pack
+  proposal (non-programmer friendly), feature request (with the
+  never-list fit check).
+- Splash screen: fucad brand mark (the app icon's block motif + Roboto
+  wordmark) rendered in-repo like the icon (test/tools/
+  render_splash_test.dart; white-on-transparent — preview on dark),
+  applied via flutter_native_splash incl. Android 12. Verified on a
+  cold start screenshot.
+
 ### 2026-07-12 — Playtest feedback round (7 items)
 - Drag: finger movement amplified 1.28× from the grab point so the piece
   runs ahead of the finger (1:1 tracking reads as lag on touch).

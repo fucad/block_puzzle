@@ -21,6 +21,16 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.8
+
+# Splash logo is rendered in-repo (test/tools/render_splash_test.dart).
+# Regenerate native splashes with: dart run flutter_native_splash:create
+flutter_native_splash:
+  color: "#232F56"
+  image: assets/branding/splash_logo.png
+  android_12:
+    color: "#232F56"
+    image: assets/branding/splash_logo.png
 
 flutter_launcher_icons:
   android: true

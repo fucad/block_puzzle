@@ -53,6 +53,11 @@ class _SettingsSheet extends ConsumerWidget {
               onTap: () => _confirmReset(context, ref),
             ),
             ListTile(
+              leading: const Icon(Icons.privacy_tip_outlined),
+              title: const Text('Privacy'),
+              onTap: () => _showPrivacy(context),
+            ),
+            ListTile(
               leading: const Icon(Icons.info_outline_rounded),
               title: const Text('About & licenses'),
               onTap: () => showAboutDialog(
@@ -66,6 +71,35 @@ class _SettingsSheet extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// The policy, in-app and offline — same content as PRIVACY.md.
+  void _showPrivacy(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Privacy'),
+        content: const SingleChildScrollView(
+          child: Text(
+            'Block Puzzle collects nothing.\n\n'
+            'No analytics, no ads, no crash reporting, no accounts, no '
+            'identifiers. Your scores, settings, and progress live only '
+            'on this device; deleting the app deletes them.\n\n'
+            'The app\'s only network request downloads new quest levels '
+            'from our public GitHub repository — an anonymous file '
+            'download containing no data about you. The game is fully '
+            'playable offline.\n\n'
+            'Full policy: github.com/fucad/block_puzzle/PRIVACY.md',
+          ),
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Nice'),
+          ),
+        ],
       ),
     );
   }
