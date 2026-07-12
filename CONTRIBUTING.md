@@ -65,6 +65,29 @@ transparency is part of the project ethos.
 History note: commits before v0.1 predate this rule and use milestone
 prefixes (`M2b: ...`); the convention applies from v0.1 onward.
 
+## Opening a PR, step by step
+
+1. **Fork** the repo (external contributors) or branch off `main`.
+2. **Branch**: `<type>/<short-topic>` (e.g. `content/winter-pack`).
+3. Make the change; keep it to one logical thing. If you're unsure the
+   idea will be accepted, open an issue first and save yourself work.
+4. **Run the checks** — the same ones the PR template asks about:
+   ```sh
+   dart format . && flutter analyze && flutter test
+   dart run tool/validate_quests.dart   # if you touched content/quests/
+   ```
+5. Exercise your change in the app on a device or emulator; grab a
+   screenshot for anything visual (capture recipes: docs/DEV_NOTES.md).
+6. **Open the PR** against `main` with a conventional-commit title. The
+   template will prompt you for the why and the checklist.
+7. **Review**: a maintainer reviews for correctness, the architecture
+   rules (pure logic stays in `lib/systems`/`lib/models`), and the
+   zero-extraction principles. Expect questions about *why* rather than
+   nitpicks about style — the formatter owns style.
+8. **Merge**: maintainers squash-merge. For quest packs, the moment it
+   lands on `main`, players receive it — no release needed. That is the
+   fun part, and the reason review is careful.
+
 ## Working on the code
 
 Read [ARCHITECTURE.md](ARCHITECTURE.md) first — the core invariant is
