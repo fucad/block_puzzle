@@ -15,6 +15,12 @@ clear it. Chain clears for combos; empty the whole board for a big bonus.
   the gems, each starting from a crafted board layout. New quest packs go
   live straight from this repo, no app update needed.
 
+## Screenshots
+
+| Menu | Opening break | All clear! | Treasure hunt | Gem stage |
+|:---:|:---:|:---:|:---:|:---:|
+| ![Main menu](docs/screenshots/menu.png) | ![Quest opening break](docs/screenshots/opening_break.png) | ![All-clear celebration](docs/screenshots/all_clear.png) | ![Quest map](docs/screenshots/quest_map.png) | ![Gem stage](docs/screenshots/gem_stage.png) |
+
 ## For contributors
 
 Everything is structured to be AI-assist friendly and reviewable:
