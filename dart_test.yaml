@@ -1,0 +1,5 @@
+tags:
+  # One-shot asset generators; not part of the normal suite.
+  # Run with: flutter test <file> --tags icon-gen --run-skipped
+  icon-gen:
+    skip: "asset generator - run explicitly"

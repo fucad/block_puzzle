@@ -38,12 +38,11 @@ device/simulator).
 
 ## NEXT SESSION — resume here
 
-M2 and M3 are DONE (device-verified 2026-07-12). Continue with M4:
-menu/settings polish, audio + haptics, theme seam polish, golden tests,
-perf pass, icons/store metadata, README/CONTRIBUTING, release builds.
-Notes: quest fetch will 404 until the repo is pushed to
-github.com/fucad/block_puzzle (by design, silent); lose-screen and 80%
-banner visuals still unseen on device — eyeball during M4 play-testing.
+ALL MILESTONES M0–M4 are done except the user-side release checklist
+above (keystore, iOS SDK install, store art, repo push). Good follow-ups
+when development resumes: a second theme (wood — proves the picker),
+lose-screen/80%-banner visual eyeballing during play, a CI workflow
+(analyze+test+content validation), and store screenshots.
 
 ## M3 — Quest mode
 
@@ -66,12 +65,30 @@ banner visuals still unseen on device — eyeball during M4 play-testing.
 
 ## M4 — Polish & release prep
 
-- [ ] Main menu, settings (sound/haptics/theme/reset/about+licenses)
-- [ ] Audio (CC-compatible), haptics
-- [ ] Theme system seam + default theme polish
-- [ ] Golden tests for HUD/menu; low-end device perf pass
-- [ ] App icons, store metadata, README/CONTRIBUTING docs complete
-- [ ] Android + iOS release builds verified
+- [x] Main menu, settings (sound/haptics/reset/about+licenses; the theme
+      picker appears automatically once a second GameTheme is added)
+- [x] Audio (synthesized in-repo → original CC BY; verified via logcat),
+      haptics (light/medium by placement outcome)
+- [x] Theme system seam + default theme polish (GameTheme is pure data;
+      contributing a skin = one const object)
+- [x] Golden tests for menu/map/Combo Master (caught a real overflow);
+      perf pass: release APK on emulator, zero Choreographer jank across
+      effect-heavy play — real low-end hardware pass deferred (none attached)
+- [x] App icon (rendered in-repo by test/tools/render_icon_test.dart,
+      adaptive + iOS via flutter_launcher_icons), store copy drafted
+      (docs/STORE_LISTING.md), README/CONTRIBUTING/PURPOSE complete
+- [~] Release builds: Android verified (aab 50.2MB + apk, release mode
+      played on emulator). iOS blocked by local toolchain: Xcode lacks
+      the iOS platform SDK (install via Xcode ▸ Settings ▸ Components,
+      then `flutter build ios --release --no-codesign`)
+
+## Release checklist (user-side, never in repo)
+
+- [ ] Android upload keystore + key.properties (secrets — keep local)
+- [ ] Install iOS platform SDK in Xcode; build + archive
+- [ ] Store screenshots + Play feature graphic (docs/STORE_LISTING.md)
+- [ ] Push repo to github.com/fucad/block_puzzle (activates quest fetch)
+- [ ] Real low-end device perf sanity check
 
 ## Deferred work
 

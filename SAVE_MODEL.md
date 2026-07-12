@@ -2,9 +2,12 @@
 
 All persistence goes through one service layer (`lib/services/`, M2) and
 serializes the versioned `SaveData` model (`lib/models/save_data.dart`).
-Storage medium: a single JSON document. Cached quest packs are separate
-files on disk, NOT inside the save (see CONTRIBUTING_QUESTS.md / M3); the
-save only stores fetch metadata.
+Storage medium: a single JSON document under the SharedPreferences key
+`save`. Cached quest content lives OUTSIDE the save document, in sibling
+keys: `quest_manifest` (latest fetched manifest) and
+`quest_pack_<sha256>` (content-addressed pack bodies); the save itself
+only stores the fetch-throttle timestamp. Unreadable saves are moved to
+`save_unreadable`, never overwritten.
 
 Any schema change bumps `version` and adds a migration note here. Loading an
 unknown version throws — callers must handle it explicitly rather than
