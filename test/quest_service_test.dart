@@ -52,12 +52,13 @@ Map<String, Object> extraRef({String date = '2026-07-01'}) => {
 final now = DateTime.utc(2026, 7, 12);
 
 void main() {
-  test('offline first launch: bundled starter pack is playable', () async {
+  test('offline first launch: bundled released packs playable, '
+      'future pack drives the countdown', () async {
     final service = await makeService();
     final catalog = await service.loadCatalog(now);
-    expect(catalog.playable.map((p) => p.id), ['starter']);
-    expect(catalog.playable.single.stages, hasLength(15));
-    expect(catalog.nextUpcoming, isNull);
+    expect(catalog.playable.map((p) => p.id), ['starter', 'deep-dig']);
+    expect(catalog.playable.first.stages, hasLength(15));
+    expect(catalog.nextUpcoming?.id, 'treasure-trail');
   });
 
   test('refresh downloads, verifies, and caches a new released pack', () async {
@@ -74,7 +75,8 @@ void main() {
     );
     expect(await service.refresh(now), isTrue);
     final catalog = await service.loadCatalog(now);
-    expect(catalog.playable.map((p) => p.id), ['extra']);
+    // Union with the bundle; 'extra' ties starter on date, id breaks it.
+    expect(catalog.playable.map((p) => p.id), ['extra', 'starter', 'deep-dig']);
     expect(urls.any((u) => u.contains('fucad/block_puzzle')), isTrue);
   });
 
@@ -86,10 +88,9 @@ void main() {
     );
     await service.refresh(now);
     final catalog = await service.loadCatalog(now);
-    expect(
-      catalog.playable,
-      isEmpty,
-    ); // bundled starter absent from new manifest
+    // The corrupt pack is rejected; bundled packs are unaffected.
+    expect(catalog.playable.map((p) => p.id), isNot(contains('extra')));
+    expect(catalog.playable.map((p) => p.id), contains('starter'));
   });
 
   test(
@@ -108,15 +109,35 @@ void main() {
       await service.refresh(now);
       expect(packFetches, 1); // pre-cached
       final catalog = await service.loadCatalog(now);
-      expect(catalog.playable, isEmpty);
+      expect(catalog.playable.map((p) => p.id), isNot(contains('extra')));
+      // 07-20 beats the bundled treasure-trail (07-26) for the countdown.
       expect(catalog.nextUpcoming!.id, 'extra');
       expect(catalog.nextUpcoming!.releaseDate, DateTime.utc(2026, 7, 20));
 
       // ...and on release day it plays from cache with no further network.
       final later = await service.loadCatalog(DateTime.utc(2026, 7, 20));
-      expect(later.playable.map((p) => p.id), ['extra']);
+      expect(later.playable.map((p) => p.id), contains('extra'));
     },
   );
+
+  test('a stale fetched manifest cannot hide newer bundled packs', () async {
+    // Regression: the repo's manifest listed only "extra" while the app
+    // bundle shipped starter+deep-dig+treasure-trail. The catalog must be
+    // the union, chronologically ordered, with the countdown intact.
+    final service = await makeService(
+      fetcher: (uri) async => uri.path.endsWith('manifest.json')
+          ? manifestWith([extraRef(date: '2026-07-03')])
+          : _packBody,
+    );
+    await service.refresh(now);
+    final catalog = await service.loadCatalog(now);
+    expect(catalog.playable.map((p) => p.id), [
+      'starter', // 07-01 (bundle)
+      'extra', // 07-03 (fetched)
+      'deep-dig', // 07-05 (bundle)
+    ]);
+    expect(catalog.nextUpcoming?.id, 'treasure-trail');
+  });
 
   test(
     'network failure and corrupt cached manifest degrade gracefully',
@@ -126,9 +147,8 @@ void main() {
       );
       expect(await service.refresh(now), isFalse);
       final catalog = await service.loadCatalog(now);
-      expect(catalog.playable.map((p) => p.id), [
-        'starter',
-      ]); // bundled fallback
+      // Bundled fallback still serves both released packs.
+      expect(catalog.playable.map((p) => p.id), ['starter', 'deep-dig']);
     },
   );
 }

@@ -70,12 +70,30 @@ class QuestService {
     }
   }
 
-  Future<QuestManifest?> _bestManifest() async =>
-      _parseManifest(prefs.getString(_manifestKey)) ??
-      _parseManifest(await bundleLoader('manifest.json'));
+  /// Union of the bundled and last-fetched manifests, by pack id (the
+  /// fetched entry wins a conflict). Either side can legitimately be
+  /// ahead: the repo after a content merge, or the app right after an
+  /// update that bundles packs a stale cached manifest doesn't list.
+  /// Chronological order keeps level numbering stable regardless of
+  /// which source a pack came from.
+  Future<QuestManifest?> _mergedManifest() async {
+    final cached = _parseManifest(prefs.getString(_manifestKey));
+    final bundled = _parseManifest(await bundleLoader('manifest.json'));
+    if (cached == null && bundled == null) return null;
+    final byId = {
+      for (final p in bundled?.packs ?? <QuestPackRef>[]) p.id: p,
+      for (final p in cached?.packs ?? <QuestPackRef>[]) p.id: p,
+    };
+    final packs = byId.values.toList()
+      ..sort((a, b) {
+        final byDate = a.releaseDate.compareTo(b.releaseDate);
+        return byDate != 0 ? byDate : a.id.compareTo(b.id);
+      });
+    return QuestManifest(packs: packs);
+  }
 
   Future<QuestCatalog> loadCatalog(DateTime nowUtc) async {
-    final manifest = await _bestManifest();
+    final manifest = await _mergedManifest();
     if (manifest == null) {
       return const QuestCatalog(playable: [], nextUpcoming: null);
     }
