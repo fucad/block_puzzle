@@ -29,11 +29,23 @@ String? praiseFor(PlacementEvents e) {
 }
 
 /// Spawns everything a placement earned: line sweeps, per-cell bursts,
-/// praise + combo popups, and the all-clear celebration.
+/// screen shake, praise + combo popups, and the all-clear celebration.
 void spawnPlacementEffects(BlockPuzzleGame game, PlacementEvents events) {
   if (events.linesCleared == 0) return;
   final geo = game.geometry;
   final board = geo.boardRect;
+
+  // Shake scales with the moment: any multi-line or combo rattles the
+  // board; an all-clear slams it.
+  if (events.allClear) {
+    game.shake(amplitude: 12, duration: 0.5);
+  } else if (events.combo >= 2 || events.linesCleared >= 2) {
+    game.shake(
+      amplitude: (3 + events.combo * 1.2 + events.linesCleared * 1.5)
+          .clamp(4, 10)
+          .toDouble(),
+    );
+  }
 
   for (final row in events.clearedRows) {
     _sweep(

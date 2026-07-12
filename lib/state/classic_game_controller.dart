@@ -5,11 +5,30 @@ import '../models/game_state.dart';
 import '../systems/game_engine.dart';
 import 'providers.dart';
 
+/// Everything the end-of-run summary screen needs, captured at the
+/// moment the run ended (before the save folded the result in).
+class RunSummary {
+  const RunSummary({
+    required this.score,
+    required this.bestCombo,
+    required this.allClears,
+    required this.newHighScore,
+  });
+
+  final int score;
+  final int bestCombo;
+  final int allClears;
+  final bool newHighScore;
+}
+
 /// Drives one classic run. Null state = no run in progress. The rules all
 /// live in GameEngine; this notifier only sequences state, persistence,
 /// and end-of-run bookkeeping.
 class ClassicGameController extends Notifier<GameState?> {
   int? _seed;
+
+  /// Set when a run ends; read by the summary flow.
+  RunSummary? lastSummary;
 
   @override
   GameState? build() {
@@ -50,6 +69,15 @@ class ClassicGameController extends Notifier<GameState?> {
     state = outcome.state;
     final save = ref.read(saveDataProvider.notifier);
     if (GameEngine.isGameOver(outcome.state)) {
+      // Capture BEFORE folding into the save: "new high score" compares
+      // against the record as it stood when the run ended.
+      lastSummary = RunSummary(
+        score: outcome.state.score,
+        bestCombo: outcome.state.roundBestCombo,
+        allClears: outcome.state.allClears,
+        newHighScore:
+            outcome.state.score > ref.read(saveDataProvider).classicHighScore,
+      );
       save.recordClassicRunEnd(
         score: outcome.state.score,
         bestCombo: outcome.state.roundBestCombo,

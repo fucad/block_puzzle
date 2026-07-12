@@ -5,7 +5,8 @@ import 'package:block_puzzle/models/quest.dart';
 import 'package:block_puzzle/services/quest_service.dart';
 import 'package:block_puzzle/state/providers.dart';
 import 'package:block_puzzle/state/quest_providers.dart';
-import 'package:block_puzzle/ui/combo_master_screen.dart';
+import 'package:block_puzzle/state/classic_game_controller.dart';
+import 'package:block_puzzle/ui/run_summary_screen.dart';
 import 'package:block_puzzle/ui/main_menu_screen.dart';
 import 'package:block_puzzle/ui/quest_map_screen.dart';
 import 'package:flutter/material.dart';
@@ -76,15 +77,24 @@ void main() {
     );
   });
 
-  testWidgets('combo master golden', (tester) async {
+  testWidgets('run summary golden (Try Again variant)', (tester) async {
     await tester.binding.setSurfaceSize(const Size(392, 807));
     await tester.pumpWidget(
-      await app(const ComboMasterScreen(score: 1234, roundBestCombo: 7)),
+      await app(
+        const RunSummaryScreen(
+          summary: RunSummary(
+            score: 1234,
+            bestCombo: 7,
+            allClears: 1,
+            newHighScore: false,
+          ),
+        ),
+      ),
     );
     await tester.pump(const Duration(milliseconds: 100));
     await expectLater(
-      find.byType(ComboMasterScreen),
-      matchesGoldenFile('goldens/combo_master.png'),
+      find.byType(RunSummaryScreen),
+      matchesGoldenFile('goldens/run_summary.png'),
     );
   });
 }

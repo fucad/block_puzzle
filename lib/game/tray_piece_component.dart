@@ -20,9 +20,14 @@ class TrayPieceComponent extends PositionComponent
   final Piece piece;
 
   bool _dragging = false;
+  Vector2 _grabPoint = Vector2.zero();
 
   /// How far the dragged piece floats above the finger, in board cells.
   static const _liftCells = 1.6;
+
+  /// Finger movement is amplified so the piece runs slightly AHEAD of the
+  /// finger — on a touchscreen, 1:1 tracking reads as lag.
+  static const _dragGain = 1.28;
 
   double get _trayCell => game.geometry.trayCell;
   double get _boardCell => game.geometry.cell;
@@ -63,8 +68,10 @@ class TrayPieceComponent extends PositionComponent
   void onDragStart(DragStartEvent event) {
     super.onDragStart(event);
     _dragging = true;
+    _grabPoint = event.canvasPosition.clone();
     priority = 100;
     scale = Vector2.all(_boardCell / _trayCell);
+    game.onPickup?.call();
     _followFinger(event.canvasPosition);
   }
 
@@ -75,7 +82,9 @@ class TrayPieceComponent extends PositionComponent
   }
 
   void _followFinger(Vector2 canvasPoint) {
-    position = canvasPoint + Vector2(0, -_liftCells * _boardCell);
+    // Amplify movement away from the grab point (see _dragGain).
+    final amplified = _grabPoint + (canvasPoint - _grabPoint) * _dragGain;
+    position = amplified + Vector2(0, -_liftCells * _boardCell);
     game.updatePreview(piece, _topLeftCorner());
   }
 

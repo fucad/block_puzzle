@@ -29,10 +29,21 @@ class BoardComponent extends PositionComponent
   @override
   void update(double dt) => _time += dt;
 
+  static final _shakeRng = Random();
+
   @override
   void render(Canvas canvas) {
     final theme = game.theme;
     final cell = game.geometry.cell;
+
+    // Combo/clear screen shake: jitter the whole board while it decays.
+    if (game.shaking) {
+      final s = game.shakeStrength;
+      canvas.translate(
+        (_shakeRng.nextDouble() * 2 - 1) * s,
+        (_shakeRng.nextDouble() * 2 - 1) * s,
+      );
+    }
 
     // Combo streak glow around the frame: gold when warm, hue-cycling
     // rainbow when hot (reference UX).

@@ -6,8 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../game/block_puzzle_game.dart';
 import '../models/game_state.dart';
 import '../state/classic_game_controller.dart';
+import '../systems/game_engine.dart';
 import '../state/providers.dart';
-import 'combo_master_screen.dart';
+import 'run_summary_screen.dart';
 import 'settings_sheet.dart';
 
 /// Classic mode: HUD (high score, current score, settings) over the Flame
@@ -33,39 +34,56 @@ class _ClassicScreenState extends ConsumerState<ClassicScreen> {
     _game = BlockPuzzleGame(
       theme: ref.read(themeProvider),
       initialState: ref.read(classicGameProvider)!,
+      onPickup: () {
+        if (ref.read(saveDataProvider).settings.hapticsOn) {
+          HapticFeedback.selectionClick();
+        }
+      },
       onPlace: (trayIndex, row, col) {
         final outcome = controller.place(trayIndex, row, col);
         if (outcome != null) {
           ref.read(audioProvider).placement(outcome.events);
-          if (ref.read(saveDataProvider).settings.hapticsOn) {
-            outcome.events.linesCleared > 0
-                ? HapticFeedback.mediumImpact()
-                : HapticFeedback.lightImpact();
-          }
+          _placementHaptic(outcome.events);
         }
         return outcome;
       },
     );
   }
 
+  /// Haptics scaled to the moment; strong enough to actually be felt.
+  void _placementHaptic(PlacementEvents events) {
+    if (!ref.read(saveDataProvider).settings.hapticsOn) return;
+    if (events.allClear) {
+      HapticFeedback.vibrate();
+    } else if (events.linesCleared > 0) {
+      HapticFeedback.heavyImpact();
+    } else {
+      HapticFeedback.mediumImpact();
+    }
+  }
+
   void _onStateChanged(GameState? next) {
     if (next == null) return;
     _game.syncState(next);
-    if (ref.read(classicGameProvider.notifier).isGameOver) {
+    final controller = ref.read(classicGameProvider.notifier);
+    if (controller.isGameOver) {
       if (_gameOverShown) return;
       _gameOverShown = true;
       ref.read(audioProvider).runEnded();
+      final summary =
+          controller.lastSummary ??
+          RunSummary(
+            score: next.score,
+            bestCombo: next.roundBestCombo,
+            allClears: next.allClears,
+            newHighScore: false,
+          );
       // Let the last clear's effects play before the summary takes over.
       Future.delayed(const Duration(milliseconds: 900), () {
         if (!mounted) return;
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (_) => ComboMasterScreen(
-              score: next.score,
-              roundBestCombo: next.roundBestCombo,
-            ),
-          ),
+          MaterialPageRoute(builder: (_) => RunSummaryScreen(summary: summary)),
         );
       });
     } else {

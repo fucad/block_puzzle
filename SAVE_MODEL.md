@@ -44,6 +44,7 @@ silently discarding progress.
   "score": 1240,
   "combo": 3,
   "roundBestCombo": 7,
+  "allClears": 1,                       // this run; absent in old saves -> 0
   "gems": {"red": 1}                    // collected this run (quest only)
 }
 ```

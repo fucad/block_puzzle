@@ -172,6 +172,31 @@ lose-screen/80%-banner visual eyeballing during play, a CI workflow
 - Session ended mid slice-D device verification at user request; all
   code committed on `dev`, working tree clean, 43/43 tests green.
 
+### 2026-07-12 — Playtest feedback round (7 items)
+- Drag: finger movement amplified 1.28× from the grab point so the piece
+  runs ahead of the finger (1:1 tracking reads as lag on touch).
+- Haptics: strengthened & completed — selectionClick on pickup, medium
+  on placement, heavy on clears, vibrate on all-clear. (Earlier testing
+  was partly on the emulator, which has no motor.)
+- Quest banners now fire at 30/50/80% of the goal (only the highest
+  newly-crossed milestone shows on big jumps).
+- Screen shake on combos ≥2 / multi-line (scaled), big slam on
+  all-clear — canvas jitter in BoardComponent, decayed in game.update.
+- Run summary variants (priority order): New High Score → Combo Master
+  (combo > 15) → All-Clear Ace (> 5 all-clears) → Try Again. GameState
+  now tracks allClears (save-compatible, tolerant default).
+- Quest opening trays: stages pin their first 3 pieces ("tray" field) and
+  boards were tuned so an opening line-break is always possible — the
+  validator enforces both (all 40 stages pass). Colors of the tweaked
+  rows match their breaker pieces where practical.
+- Tray dealing v2: every deal is playable in SOME order (capped
+  backtracking), and pieces that can break a line right now are boosted
+  3× — satisfaction-first dealing, still fully deterministic per seed.
+- Dev gotcha (expected behavior): unpushed local quest content gets
+  masked once the app fetches the older remote pack (fetched wins for
+  the same pack id — correct in production where main ⊇ every shipped
+  bundle). Push before on-device content verification.
+
 ### 2026-07-12 — Treasure-hunt map, 25 new quests, manifest-merge fix
 - Quest map redesigned as a treasure hunt: dashed golden trail (lit
   behind the current level), circular nodes, auto-scroll to the current

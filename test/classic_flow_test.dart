@@ -4,7 +4,7 @@ import 'package:block_puzzle/models/game_state.dart';
 import 'package:block_puzzle/state/classic_game_controller.dart';
 import 'package:block_puzzle/state/providers.dart';
 import 'package:block_puzzle/ui/classic_screen.dart';
-import 'package:block_puzzle/ui/combo_master_screen.dart';
+import 'package:block_puzzle/ui/run_summary_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -63,7 +63,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400)); // route animation
     await tester.pump(const Duration(milliseconds: 400));
 
-    expect(find.byType(ComboMasterScreen), findsOneWidget);
+    expect(find.byType(RunSummaryScreen), findsOneWidget);
     expect(find.text('778'), findsOneWidget); // 777 + 1 cell
     // Fresh save: round best 5 became the all-time best too, so the text
     // appears in both stats.
@@ -74,7 +74,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 50));
     await tester.pump(const Duration(milliseconds: 400));
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.byType(ComboMasterScreen), findsNothing);
+    expect(find.byType(RunSummaryScreen), findsNothing);
     final fresh = container.read(classicGameProvider);
     expect(fresh, isNotNull);
     expect(fresh!.score, 0);

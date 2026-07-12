@@ -4,28 +4,57 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../state/classic_game_controller.dart';
 import '../state/providers.dart';
 
-/// Post-run summary (reference: gold "Combo Master" screen): final score,
-/// round best combo, all-time best combo, play again or back to menu.
-class ComboMasterScreen extends ConsumerWidget {
-  const ComboMasterScreen({
-    super.key,
-    required this.score,
-    required this.roundBestCombo,
-  });
+/// Post-run summary. The headline scales to the run (best first match):
+/// new high score → combo master (combo > 15) → all-clear ace (> 5
+/// all-clears) → plain "Try Again". Same stats + retry flow either way.
+class RunSummaryScreen extends ConsumerWidget {
+  const RunSummaryScreen({super.key, required this.summary});
 
-  final int score;
-  final int roundBestCombo;
+  final RunSummary summary;
+
+  static const comboMasterMin = 16; // "more than 15 combos"
+  static const allClearAceMin = 6; // "more than 5 all-clears"
+
+  ({String title, IconData icon, List<Color> bg}) get _variant {
+    if (summary.newHighScore) {
+      return (
+        title: 'New High Score!',
+        icon: Icons.emoji_events,
+        bg: const [Color(0xFFB98A44), Color(0xFF8A6432)],
+      );
+    }
+    if (summary.bestCombo >= comboMasterMin) {
+      return (
+        title: 'Combo Master',
+        icon: Icons.bolt_rounded,
+        bg: const [Color(0xFF7B4397), Color(0xFF4527A0)],
+      );
+    }
+    if (summary.allClears >= allClearAceMin) {
+      return (
+        title: 'All-Clear Ace!',
+        icon: Icons.auto_awesome,
+        bg: const [Color(0xFF2D7DD2), Color(0xFF1B4E9B)],
+      );
+    }
+    return (
+      title: 'Try Again',
+      icon: Icons.replay_rounded,
+      bg: const [Color(0xFF3B4E8C), Color(0xFF232F56)],
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final save = ref.watch(saveDataProvider);
+    final variant = _variant;
     return Scaffold(
       body: DecoratedBox(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFB98A44), Color(0xFF8A6432)],
+            colors: variant.bg,
           ),
         ),
         child: SafeArea(
@@ -40,30 +69,30 @@ class ComboMasterScreen extends ConsumerWidget {
                 ),
               ),
               const Spacer(),
-              const Icon(
-                Icons.emoji_events,
-                size: 72,
-                color: Color(0xFFFFE082),
-              ),
+              Icon(variant.icon, size: 72, color: const Color(0xFFFFE082)),
               const SizedBox(height: 8),
-              const Text(
-                'Combo Master',
-                style: TextStyle(
-                  fontSize: 44,
+              Text(
+                variant.title,
+                style: const TextStyle(
+                  fontSize: 42,
                   fontWeight: FontWeight.w900,
                   color: Color(0xFFFFE082),
                   shadows: [Shadow(color: Colors.black26, blurRadius: 8)],
                 ),
               ),
               const Spacer(),
-              _Stat(label: 'Score', value: '$score'),
-              const SizedBox(height: 28),
-              _Stat(label: 'Round Best', value: 'Combo $roundBestCombo'),
-              const SizedBox(height: 28),
+              _Stat(label: 'Score', value: '${summary.score}'),
+              const SizedBox(height: 24),
+              _Stat(label: 'Round Best', value: 'Combo ${summary.bestCombo}'),
+              const SizedBox(height: 24),
               _Stat(
                 label: 'All Time Combo',
                 value: 'Combo ${save.allTimeBestCombo}',
               ),
+              if (summary.allClears > 0) ...[
+                const SizedBox(height: 24),
+                _Stat(label: 'All-Clears', value: '${summary.allClears}'),
+              ],
               const Spacer(flex: 2),
               SizedBox(
                 width: 240,
@@ -119,7 +148,7 @@ class _Stat extends StatelessWidget {
         Text(
           label,
           style: const TextStyle(
-            fontSize: 18,
+            fontSize: 17,
             fontWeight: FontWeight.w700,
             color: Color(0xFFE8C98A),
           ),
@@ -128,7 +157,7 @@ class _Stat extends StatelessWidget {
         Text(
           value,
           style: const TextStyle(
-            fontSize: 34,
+            fontSize: 32,
             fontWeight: FontWeight.w900,
             color: Colors.white,
             shadows: [Shadow(color: Colors.black26, blurRadius: 6)],

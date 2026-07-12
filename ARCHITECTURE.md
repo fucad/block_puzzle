@@ -70,15 +70,24 @@ save to resume a run mid-tray).
 Tray generation algorithm (documented contract, tested):
 
 1. When the tray refills, compute for each catalog piece whether it fits
-   anywhere on the current board.
-2. Effective weight = base weight × `fitPenalty` (0.15) if it does NOT fit,
-   × 1.0 if it does. This *lightly* biases toward playable pieces without
-   making the game trivially safe.
-3. Draw 3 pieces by weighted choice (with replacement).
-4. Guarantee: if none of the 3 fits but some catalog piece does, the last
-   slot is redrawn from the fitting pieces only (base weights). A fresh
-   tray is therefore always playable unless nothing fits at all; game
-   overs happen mid-tray, after the guaranteed piece is spent.
+   anywhere on the current board, and whether it is a **breaker** (some
+   position completes a line right now).
+2. Effective weight = base × `fitPenalty` (0.15) if it does NOT fit ×
+   `breakerBoost` (3.0) if it is a breaker — clearing lines is the core
+   satisfaction, so the deal leans into it.
+3. Draw a candidate set of 3 (weighted, with replacement); if the whole
+   draw is dead while something fits, redraw the last slot from the
+   fitting pieces.
+4. Up to `traySetDrawAttempts` (6) candidate sets are drawn; the first
+   one that is **playable in some order** (backtracking search over
+   placements with clears applied, capped at `solvabilityNodeCap` nodes)
+   wins, preferring sets that contain a breaker whenever the board
+   allows a break at all. The player might not find the order, but one
+   always exists while the board permits it.
+
+Quest stages may pin the FIRST tray via the stage's `tray` field (the
+"opening break" design — see CONTRIBUTING_QUESTS.md); the generator
+takes over from the second tray on.
 
 Classic rolls a random seed per run (persisted); quest stages may pin a
 seed in their data.

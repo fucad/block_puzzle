@@ -41,14 +41,41 @@ class BlockPuzzleGame extends FlameGame {
     required this.theme,
     required GameState initialState,
     required this.onPlace,
+    this.onPickup,
   }) : state = initialState;
 
   final GameTheme theme;
   final PlacementOutcome? Function(int trayIndex, int row, int col) onPlace;
 
+  /// Fired when a tray piece is grabbed (haptic hook).
+  final void Function()? onPickup;
+
   GameState state;
   late BoardGeometry geometry;
   DragPreview? preview;
+
+  // Screen shake, decayed in update(); board rendering reads it.
+  double _shakeTime = 0;
+  double _shakeDuration = 0;
+  double shakeAmplitude = 0;
+
+  bool get shaking => _shakeTime > 0;
+
+  /// Current shake strength, easing out over the shake's lifetime.
+  double get shakeStrength =>
+      _shakeDuration == 0 ? 0 : shakeAmplitude * (_shakeTime / _shakeDuration);
+
+  void shake({required double amplitude, double duration = 0.35}) {
+    shakeAmplitude = amplitude;
+    _shakeDuration = duration;
+    _shakeTime = duration;
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    if (_shakeTime > 0) _shakeTime = (_shakeTime - dt).clamp(0, _shakeTime);
+  }
 
   List<String?> _renderedTray = const [];
 

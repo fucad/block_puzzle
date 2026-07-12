@@ -11,6 +11,7 @@ import '../models/game_theme.dart' as gt;
 import '../models/quest.dart';
 import '../state/providers.dart';
 import '../state/quest_game_controller.dart';
+import '../systems/game_engine.dart';
 import 'quest_result_screen.dart';
 import 'settings_sheet.dart';
 
@@ -27,7 +28,11 @@ class QuestScreen extends ConsumerStatefulWidget {
 class _QuestScreenState extends ConsumerState<QuestScreen> {
   late final BlockPuzzleGame _game;
   bool _resultShown = false;
-  bool _bannerShown = false;
+
+  /// Encouragement banners at rising goal-progress milestones.
+  static const _bannerThresholds = [0.3, 0.5, 0.8];
+  final _shownBanners = <double>{};
+  String? _bannerText;
   bool _bannerVisible = false;
 
   @override
@@ -37,33 +42,53 @@ class _QuestScreenState extends ConsumerState<QuestScreen> {
     _game = BlockPuzzleGame(
       theme: ref.read(themeProvider),
       initialState: ref.read(questGameProvider)!.game,
+      onPickup: () {
+        if (ref.read(saveDataProvider).settings.hapticsOn) {
+          HapticFeedback.selectionClick();
+        }
+      },
       onPlace: (trayIndex, row, col) {
         final outcome = controller.place(trayIndex, row, col);
         if (outcome != null) {
           ref.read(audioProvider).placement(outcome.events);
-          if (ref.read(saveDataProvider).settings.hapticsOn) {
-            outcome.events.linesCleared > 0
-                ? HapticFeedback.mediumImpact()
-                : HapticFeedback.lightImpact();
-          }
+          _placementHaptic(outcome.events);
         }
         return outcome;
       },
     );
   }
 
+  void _placementHaptic(PlacementEvents events) {
+    if (!ref.read(saveDataProvider).settings.hapticsOn) return;
+    if (events.allClear) {
+      HapticFeedback.vibrate();
+    } else if (events.linesCleared > 0) {
+      HapticFeedback.heavyImpact();
+    } else {
+      HapticFeedback.mediumImpact();
+    }
+  }
+
   void _onRunChanged(QuestRun? run) {
     if (run == null) return;
     _game.syncState(run.game);
 
-    if (!_bannerShown &&
-        run.status == QuestStatus.playing &&
-        run.progress >= 0.8) {
-      _bannerShown = true;
-      setState(() => _bannerVisible = true);
-      Timer(const Duration(milliseconds: 1800), () {
-        if (mounted) setState(() => _bannerVisible = false);
-      });
+    if (run.status == QuestStatus.playing) {
+      // Show only the highest newly crossed milestone (a big jump
+      // shouldn't queue three banners).
+      final crossed = _bannerThresholds
+          .where((t) => run.progress >= t && !_shownBanners.contains(t))
+          .toList();
+      if (crossed.isNotEmpty) {
+        _shownBanners.addAll(crossed);
+        setState(() {
+          _bannerText = '${(crossed.last * 100).round()}% Done!';
+          _bannerVisible = true;
+        });
+        Timer(const Duration(milliseconds: 1800), () {
+          if (mounted) setState(() => _bannerVisible = false);
+        });
+      }
     }
 
     if (run.status != QuestStatus.playing && !_resultShown) {
@@ -163,9 +188,9 @@ class _QuestScreenState extends ConsumerState<QuestScreen> {
                             BoxShadow(color: Colors.black38, blurRadius: 10),
                           ],
                         ),
-                        child: const Text(
-                          '80% Done!',
-                          style: TextStyle(
+                        child: Text(
+                          _bannerText ?? '',
+                          style: const TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.w900,
                             color: Color(0xFFFFD54F),
