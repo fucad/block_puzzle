@@ -7,6 +7,20 @@
       "release_date": "2026-07-01",
       "file": "packs/starter.json",
       "checksum": "358ff6c7307b5eba1f0e8a6ace0896fda019f88c09de899843968785a0b3bd12"
+    },
+    {
+      "id": "deep-dig",
+      "title": "Deep Dig",
+      "release_date": "2026-07-05",
+      "file": "packs/deep-dig.json",
+      "checksum": "89741af4d18a89928b968bf2fd2fe4fee6c0f58c1df11e7485d311e26caafd84"
+    },
+    {
+      "id": "treasure-trail",
+      "title": "Treasure Trail",
+      "release_date": "2026-07-26",
+      "file": "packs/treasure-trail.json",
+      "checksum": "39ac8525070d1b461674c5d4c25ea26ffe65b50ca7bbc7e59433017dc5806e82"
     }
   ]
 }
