@@ -39,10 +39,13 @@ class _QuestScreenState extends ConsumerState<QuestScreen> {
       initialState: ref.read(questGameProvider)!.game,
       onPlace: (trayIndex, row, col) {
         final outcome = controller.place(trayIndex, row, col);
-        if (outcome != null && ref.read(saveDataProvider).settings.hapticsOn) {
-          outcome.events.linesCleared > 0
-              ? HapticFeedback.mediumImpact()
-              : HapticFeedback.lightImpact();
+        if (outcome != null) {
+          ref.read(audioProvider).placement(outcome.events);
+          if (ref.read(saveDataProvider).settings.hapticsOn) {
+            outcome.events.linesCleared > 0
+                ? HapticFeedback.mediumImpact()
+                : HapticFeedback.lightImpact();
+          }
         }
         return outcome;
       },
@@ -65,6 +68,9 @@ class _QuestScreenState extends ConsumerState<QuestScreen> {
 
     if (run.status != QuestStatus.playing && !_resultShown) {
       _resultShown = true;
+      run.status == QuestStatus.won
+          ? ref.read(audioProvider).stageWon()
+          : ref.read(audioProvider).runEnded();
       // Let the final clear's effects play out first.
       Future.delayed(const Duration(milliseconds: 900), () {
         if (!mounted) return;

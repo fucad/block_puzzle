@@ -35,10 +35,13 @@ class _ClassicScreenState extends ConsumerState<ClassicScreen> {
       initialState: ref.read(classicGameProvider)!,
       onPlace: (trayIndex, row, col) {
         final outcome = controller.place(trayIndex, row, col);
-        if (outcome != null && ref.read(saveDataProvider).settings.hapticsOn) {
-          outcome.events.linesCleared > 0
-              ? HapticFeedback.mediumImpact()
-              : HapticFeedback.lightImpact();
+        if (outcome != null) {
+          ref.read(audioProvider).placement(outcome.events);
+          if (ref.read(saveDataProvider).settings.hapticsOn) {
+            outcome.events.linesCleared > 0
+                ? HapticFeedback.mediumImpact()
+                : HapticFeedback.lightImpact();
+          }
         }
         return outcome;
       },
@@ -51,6 +54,7 @@ class _ClassicScreenState extends ConsumerState<ClassicScreen> {
     if (ref.read(classicGameProvider.notifier).isGameOver) {
       if (_gameOverShown) return;
       _gameOverShown = true;
+      ref.read(audioProvider).runEnded();
       // Let the last clear's effects play before the summary takes over.
       Future.delayed(const Duration(milliseconds: 900), () {
         if (!mounted) return;

@@ -7,6 +7,7 @@ environment:
   sdk: ^3.12.1
 
 dependencies:
+  audioplayers: ^6.8.1
   crypto: ^3.0.7
   flame: ^1.37.0
   flutter:
@@ -28,3 +29,5 @@ flutter:
   assets:
     - content/quests/
     - content/quests/packs/
+    # Synthesized in-repo (tool/generate_audio.py) — original, CC BY.
+    - assets/audio/

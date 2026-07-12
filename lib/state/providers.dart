@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/game_theme.dart';
+import '../services/audio_service.dart';
 import '../services/persistence_service.dart';
 import 'save_data_notifier.dart';
 
@@ -21,3 +22,14 @@ final saveDataProvider = NotifierProvider<SaveDataNotifier, SaveData>(
 final themeProvider = Provider<GameTheme>(
   (ref) => themeById(ref.watch(saveDataProvider).settings.themeId),
 );
+
+final audioProvider = Provider<AudioService>((ref) {
+  final service = AudioService()
+    ..enabled = ref.read(saveDataProvider).settings.soundOn;
+  ref.listen(
+    saveDataProvider,
+    (_, next) => service.enabled = next.settings.soundOn,
+  );
+  ref.onDispose(service.dispose);
+  return service;
+});
