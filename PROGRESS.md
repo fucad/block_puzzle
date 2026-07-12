@@ -172,6 +172,25 @@ lose-screen/80%-banner visual eyeballing during play, a CI workflow
 - Session ended mid slice-D device verification at user request; all
   code committed on `dev`, working tree clean, 43/43 tests green.
 
+### 2026-07-12 — Treasure-hunt map, 25 new quests, manifest-merge fix
+- Quest map redesigned as a treasure hunt: dashed golden trail (lit
+  behind the current level), circular nodes, auto-scroll to the current
+  level, and a treasure chest at the trail's end that opens when every
+  level is cleared — achievement only, grants nothing (zero-extraction).
+- Content: Deep Dig (15 stages, live) and Treasure Trail (10 stages,
+  release 2026-07-26 — first future-dated pack, activates the menu
+  countdown badge, verified "14d 0h" on device). 40 stages total.
+- Real bug found during device verification: the fetched manifest used
+  to REPLACE the bundled one, so a stale remote (or a stale cache after
+  an app update ships new bundled packs) hid newer bundled content.
+  Manifests are now merged by pack id (fetched wins conflicts), ordered
+  chronologically so level numbering stays stable. Regression-tested.
+- CONTRIBUTING_QUESTS.md stays at the repo root (GitHub convention,
+  linked from README/CONTRIBUTING); content/quests/README.md added as a
+  pointer for authors who land in the content folder first.
+- Scrolling: single scrollable handles 40+ nodes fine; if packs ever
+  reach hundreds of levels, switch the map body to slivers.
+
 ### 2026-07-12 — Git workflow rule adopted
 - Conventional Commits + typed branches + squash-merge PRs to `main`,
   documented in CONTRIBUTING.md. Chosen because it's the de-facto OSS
