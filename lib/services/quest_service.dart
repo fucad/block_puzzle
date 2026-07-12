@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show debugPrint, kDebugMode;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -40,11 +41,20 @@ class QuestService {
   static const _manifestKey = 'quest_manifest';
   static String _packKey(String checksum) => 'quest_pack_$checksum';
 
+  // Failures degrade silently for players, but say why in debug builds —
+  // a swallowed reason cost real diagnosis time once already.
   static Future<String?> _httpFetcher(Uri uri) async {
     try {
       final response = await http.get(uri).timeout(questFetchTimeout);
-      return response.statusCode == 200 ? response.body : null;
-    } on Exception {
+      if (response.statusCode != 200) {
+        if (kDebugMode) {
+          debugPrint('quest fetch $uri -> ${response.statusCode}');
+        }
+        return null;
+      }
+      return response.body;
+    } on Exception catch (e) {
+      if (kDebugMode) debugPrint('quest fetch $uri failed: $e');
       return null;
     }
   }
