@@ -47,14 +47,24 @@ class PlacementOutcome {
 /// is exactly reproducible (tested in game_engine_test.dart).
 class GameEngine {
   /// Fresh run: [board] is empty for Classic or pre-placed for a Quest
-  /// stage; the first tray is drawn immediately from [seed].
-  static GameState newGame(int seed, {Board? board}) {
+  /// stage. The first tray is drawn from [seed] — unless the stage pins
+  /// an [initialTray] (quest "opening break" design), which bypasses the
+  /// generator for that first set only.
+  static GameState newGame(
+    int seed, {
+    Board? board,
+    List<String>? initialTray,
+  }) {
+    assert(initialTray == null || initialTray.length == traySize);
+    assert(initialTray?.every(pieceById.containsKey) ?? true);
     final startBoard = board ?? Board.empty();
     final rng = GameRng(seed);
-    final tray = PieceGenerator(rng).nextTray(startBoard);
+    final tray =
+        initialTray ??
+        [for (final p in PieceGenerator(rng).nextTray(startBoard)) p.id];
     return GameState(
       board: startBoard,
-      tray: [for (final piece in tray) piece.id],
+      tray: List.of(tray),
       rngState: rng.state,
       score: 0,
       combo: 0,
@@ -110,6 +120,7 @@ class GameEngine {
       roundBestCombo: combo > state.roundBestCombo
           ? combo
           : state.roundBestCombo,
+      allClears: allClear ? state.allClears + 1 : state.allClears,
       gemsCollected: clear.gems.isEmpty
           ? gems
           : {

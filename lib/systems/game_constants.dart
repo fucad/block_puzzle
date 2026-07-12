@@ -22,3 +22,15 @@ const int allClearBonus = 300;
 /// Weight multiplier for catalog pieces that do NOT currently fit on the
 /// board — biases tray generation lightly toward playable pieces.
 const double fitPenalty = 0.15;
+
+/// Weight multiplier for pieces that could complete a line right now.
+/// Breaking lines is the game's core satisfaction, so "breaker" pieces
+/// show up noticeably more often.
+const double breakerBoost = 3.0;
+
+/// How many candidate tray sets to draw looking for one that is fully
+/// playable in sequence (and ideally contains a breaker) before settling.
+const int traySetDrawAttempts = 6;
+
+/// Search budget for canPlaceAllInSomeOrder; past this, assume playable.
+const int solvabilityNodeCap = 1500;

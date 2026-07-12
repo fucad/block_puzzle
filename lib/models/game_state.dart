@@ -11,6 +11,7 @@ class GameState {
     required this.score,
     required this.combo,
     required this.roundBestCombo,
+    this.allClears = 0,
     this.gemsCollected = const {},
   });
 
@@ -29,6 +30,9 @@ class GameState {
 
   final int roundBestCombo;
 
+  /// All-clears earned this run (drives the end-of-run summary variants).
+  final int allClears;
+
   /// Gems collected so far this run (quest mode).
   final Map<GemColor, int> gemsCollected;
 
@@ -39,6 +43,7 @@ class GameState {
     int? score,
     int? combo,
     int? roundBestCombo,
+    int? allClears,
     Map<GemColor, int>? gemsCollected,
   }) {
     return GameState(
@@ -48,6 +53,7 @@ class GameState {
       score: score ?? this.score,
       combo: combo ?? this.combo,
       roundBestCombo: roundBestCombo ?? this.roundBestCombo,
+      allClears: allClears ?? this.allClears,
       gemsCollected: gemsCollected ?? this.gemsCollected,
     );
   }
@@ -61,6 +67,7 @@ class GameState {
     'score': score,
     'combo': combo,
     'roundBestCombo': roundBestCombo,
+    'allClears': allClears,
     'gems': gemsCollected.map((color, count) => MapEntry(color.name, count)),
   };
 
@@ -73,6 +80,8 @@ class GameState {
       score: json['score'] as int,
       combo: json['combo'] as int,
       roundBestCombo: json['roundBestCombo'] as int,
+      // Tolerant default: saves written before this field existed.
+      allClears: json['allClears'] as int? ?? 0,
       gemsCollected: {
         for (final entry in gems.entries)
           GemColor.values.byName(entry.key): entry.value,
