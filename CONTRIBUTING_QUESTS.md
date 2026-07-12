@@ -32,11 +32,27 @@ No programming required.
       ],
       "goal": { "type": "score", "target": 300 },
       "seed": 7,                // optional: pins piece order (else random)
-      "hard": true              // optional: red "hard" node on the map
+      "hard": true,             // optional: red "hard" node on the map
+      "tray": ["line2h", "line3h", "square2"]  // opening tray, see below
     }
   ]
 }
 ```
+
+### The opening tray (`tray`)
+
+Every stage should open with a satisfying break: give it a hand-picked
+first tray (exactly 3 catalog piece ids) and design the pre-placed board
+so at least one of those pieces completes a line immediately. The
+validator enforces both rules when `tray` is present: the three pieces
+must be placeable in some order, and one of them must be able to clear a
+line on the starting board. After the opening tray is used up, pieces
+come from the normal generator.
+
+Piece ids are the entries in `lib/models/piece_catalog.dart` (`single`,
+`line2h`…`line5v`, `square2`, `square3`, `rect2x3`, `rect3x2`,
+`corner3nw/ne/se/sw`, `corner5nw/ne/se/sw`, `tUp/tDown/tLeft/tRight`,
+`sH/sV/zH/zV`).
 
 ### Board characters
 

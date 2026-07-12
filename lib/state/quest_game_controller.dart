@@ -69,7 +69,11 @@ class QuestGameController extends Notifier<QuestRun?> {
       pack: pack,
       stage: stage,
       levelNumber: levelNumber,
-      game: GameEngine.newGame(seed, board: stage.board),
+      game: GameEngine.newGame(
+        seed,
+        board: stage.board,
+        initialTray: stage.tray,
+      ),
       status: QuestStatus.playing,
     );
   }

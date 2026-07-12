@@ -6,6 +6,7 @@ library;
 import 'board.dart';
 import 'board_strings.dart';
 import 'cell.dart';
+import 'piece_catalog.dart';
 
 const int questSchemaVersion = 1;
 
@@ -110,6 +111,7 @@ class QuestStage {
     required this.goal,
     required this.hard,
     this.seed,
+    this.tray,
   });
 
   final String id;
@@ -119,6 +121,11 @@ class QuestStage {
 
   /// Pinned piece-generator seed; null = random per attempt.
   final int? seed;
+
+  /// Optional hand-designed opening tray (exactly 3 catalog piece ids).
+  /// Stages use it so the very first moves can break the pre-placed
+  /// blocks — the validator enforces that an opening clear exists.
+  final List<String>? tray;
 
   factory QuestStage.fromJson(Map<String, Object?> json) {
     final id = _string(json, 'id', 'stage');
@@ -132,12 +139,25 @@ class QuestStage {
     }
     final hard = json['hard'] ?? false;
     if (hard is! bool) throw FormatException('$where: hard must be a bool');
+    List<String>? tray;
+    if (json['tray'] != null) {
+      tray = [for (final t in _list(json, 'tray', where)) t as String];
+      if (tray.length != 3) {
+        throw FormatException('$where: tray must have exactly 3 pieces');
+      }
+      for (final pieceId in tray) {
+        if (!pieceById.containsKey(pieceId)) {
+          throw FormatException('$where: unknown tray piece "$pieceId"');
+        }
+      }
+    }
     return QuestStage(
       id: id,
       board: board,
       goal: QuestGoal.fromJson(_asMap(json['goal'], '$where goal'), where),
       hard: hard,
       seed: seed as int?,
+      tray: tray,
     );
   }
 }

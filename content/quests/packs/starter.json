@@ -15,7 +15,15 @@
         "44.44.44",
         "444..444"
       ],
-      "goal": { "type": "score", "target": 150 }
+      "goal": {
+        "type": "score",
+        "target": 150
+      },
+      "tray": [
+        "line2h",
+        "line3h",
+        "corner3nw"
+      ]
     },
     {
       "id": "s02",
@@ -29,7 +37,15 @@
         "2..22..2",
         "22....22"
       ],
-      "goal": { "type": "score", "target": 250 }
+      "goal": {
+        "type": "score",
+        "target": 250
+      },
+      "tray": [
+        "line4h",
+        "line3v",
+        "square2"
+      ]
     },
     {
       "id": "s03",
@@ -43,8 +59,18 @@
         "3r33.r33",
         "333.3333"
       ],
-      "goal": { "type": "gems", "counts": { "red": 2 } },
-      "seed": 7
+      "goal": {
+        "type": "gems",
+        "counts": {
+          "red": 2
+        }
+      },
+      "seed": 7,
+      "tray": [
+        "single",
+        "single",
+        "line2h"
+      ]
     },
     {
       "id": "s04",
@@ -56,9 +82,17 @@
         "55..555.",
         "5.5.5.5.",
         ".5.5.5.5",
-        "55.555.5"
+        "55.55555"
       ],
-      "goal": { "type": "score", "target": 350 }
+      "goal": {
+        "type": "score",
+        "target": 350
+      },
+      "tray": [
+        "single",
+        "line2v",
+        "corner3se"
+      ]
     },
     {
       "id": "s05",
@@ -72,7 +106,17 @@
         "..111...",
         "..1111.."
       ],
-      "goal": { "type": "gems", "counts": { "purple": 3 } }
+      "goal": {
+        "type": "gems",
+        "counts": {
+          "purple": 3
+        }
+      },
+      "tray": [
+        "line3v",
+        "line2h",
+        "square2"
+      ]
     },
     {
       "id": "s06",
@@ -84,9 +128,17 @@
         "........",
         "........",
         "1.1.1.1.",
-        ".1.1.1.1"
+        "111.1111"
       ],
-      "goal": { "type": "score", "target": 450 }
+      "goal": {
+        "type": "score",
+        "target": 450
+      },
+      "tray": [
+        "single",
+        "line2h",
+        "corner3ne"
+      ]
     },
     {
       "id": "s07",
@@ -98,9 +150,20 @@
         "........",
         ".00..00.",
         ".p....r.",
-        "........"
+        "00.00000"
       ],
-      "goal": { "type": "gems", "counts": { "red": 2, "purple": 2 } }
+      "goal": {
+        "type": "gems",
+        "counts": {
+          "red": 2,
+          "purple": 2
+        }
+      },
+      "tray": [
+        "single",
+        "line3h",
+        "square2"
+      ]
     },
     {
       "id": "s08",
@@ -110,12 +173,20 @@
         "........",
         "66..66..",
         "66..66..",
-        "........",
+        "66..66..",
         "66..66..",
         "66..66.."
       ],
-      "goal": { "type": "score", "target": 500 },
-      "hard": true
+      "goal": {
+        "type": "score",
+        "target": 500
+      },
+      "hard": true,
+      "tray": [
+        "line2h",
+        "single",
+        "rect3x2"
+      ]
     },
     {
       "id": "s09",
@@ -127,9 +198,19 @@
         "....444.",
         "........",
         "........",
-        "........"
+        "4444.444"
       ],
-      "goal": { "type": "gems", "counts": { "blue": 4 } }
+      "goal": {
+        "type": "gems",
+        "counts": {
+          "blue": 4
+        }
+      },
+      "tray": [
+        "single",
+        "line3h",
+        "corner3sw"
+      ]
     },
     {
       "id": "s10",
@@ -141,9 +222,17 @@
         ".777777.",
         "..7777..",
         "...77...",
-        "........"
+        "...77..."
       ],
-      "goal": { "type": "score", "target": 600 }
+      "goal": {
+        "type": "score",
+        "target": 600
+      },
+      "tray": [
+        "line2h",
+        "single",
+        "sV"
+      ]
     },
     {
       "id": "s11",
@@ -155,9 +244,20 @@
         "..g...g.",
         ".11.11..",
         "....r...",
-        "........"
+        "111.1111"
       ],
-      "goal": { "type": "gems", "counts": { "green": 3, "red": 2 } }
+      "goal": {
+        "type": "gems",
+        "counts": {
+          "green": 3,
+          "red": 2
+        }
+      },
+      "tray": [
+        "single",
+        "line2v",
+        "corner3nw"
+      ]
     },
     {
       "id": "s12",
@@ -171,8 +271,16 @@
         "........",
         "00.00.00"
       ],
-      "goal": { "type": "score", "target": 700 },
-      "hard": true
+      "goal": {
+        "type": "score",
+        "target": 700
+      },
+      "hard": true,
+      "tray": [
+        "line4v",
+        "line2h",
+        "tDown"
+      ]
     },
     {
       "id": "s13",
@@ -186,9 +294,19 @@
         "...5....",
         "..55...."
       ],
-      "goal": { "type": "gems", "counts": { "purple": 5 } },
+      "goal": {
+        "type": "gems",
+        "counts": {
+          "purple": 5
+        }
+      },
       "seed": 99,
-      "hard": true
+      "hard": true,
+      "tray": [
+        "single",
+        "line3h",
+        "square2"
+      ]
     },
     {
       "id": "s14",
@@ -202,7 +320,15 @@
         "3......3",
         "33....33"
       ],
-      "goal": { "type": "score", "target": 800 }
+      "goal": {
+        "type": "score",
+        "target": 800
+      },
+      "tray": [
+        "line4v",
+        "line4v",
+        "square2"
+      ]
     },
     {
       "id": "s15",
@@ -214,10 +340,22 @@
         "........",
         ".6....6.",
         "p..r..p.",
-        "........"
+        "6666.666"
       ],
-      "goal": { "type": "gems", "counts": { "red": 3, "purple": 3, "yellow": 3 } },
-      "hard": true
+      "goal": {
+        "type": "gems",
+        "counts": {
+          "red": 3,
+          "purple": 3,
+          "yellow": 3
+        }
+      },
+      "hard": true,
+      "tray": [
+        "single",
+        "line2h",
+        "line3v"
+      ]
     }
   ]
 }

@@ -164,4 +164,40 @@ void main() {
       expect(problems.last, contains('blue'));
     });
   });
+
+  group('opening tray', () {
+    test('parses a valid 3-piece tray', () {
+      final stage = QuestStage.fromJson(
+        stageJson()..['tray'] = ['single', 'line2h', 'square2'],
+      );
+      expect(stage.tray, ['single', 'line2h', 'square2']);
+    });
+
+    test('rejects wrong sizes and unknown ids', () {
+      expect(
+        () => QuestStage.fromJson(stageJson()..['tray'] = ['single']),
+        throwsFormatException,
+      );
+      expect(
+        () => QuestStage.fromJson(
+          stageJson()..['tray'] = ['single', 'line2h', 'megapiece'],
+        ),
+        throwsFormatException,
+      );
+    });
+
+    test('validator demands a possible opening break', () {
+      final pack = QuestPack.fromJson({
+        'schema': 1,
+        'id': 'p',
+        'title': 'P',
+        'stages': [
+          // Empty board: nothing can clear a line on move one.
+          stageJson(board: List.filled(8, '........'))
+            ..['tray'] = ['single', 'line2h', 'square2'],
+        ],
+      });
+      expect(validatePack(pack).single, contains('opening break'));
+    });
+  });
 }

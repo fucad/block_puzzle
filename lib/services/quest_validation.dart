@@ -8,8 +8,10 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 
 import '../models/cell.dart';
+import '../models/piece_catalog.dart';
 import '../models/quest.dart';
 import '../systems/line_clear.dart';
+import '../systems/solvability.dart';
 
 String sha256Hex(List<int> bytes) => sha256.convert(bytes).toString();
 
@@ -53,6 +55,23 @@ List<String> validatePack(QuestPack pack) {
     if (stage.goal case ScoreGoal(target: final target)) {
       if (target < 50 || target > 20000) {
         problems.add('$where: score target $target out of sane range');
+      }
+    }
+
+    // Opening-tray design contract: the whole tray must be placeable in
+    // some order, and at least one tray piece must be able to break a
+    // pre-placed line immediately (the stage's opening satisfaction).
+    final tray = stage.tray;
+    if (tray != null) {
+      final pieces = [for (final id in tray) pieceById[id]!];
+      if (!canPlaceAllInSomeOrder(stage.board, pieces)) {
+        problems.add('$where: opening tray cannot be fully placed');
+      }
+      if (!pieces.any((p) => canClearLineWith(stage.board, p))) {
+        problems.add(
+          '$where: no opening tray piece can clear a line on the '
+          'starting board — the opening break is the point of "tray"',
+        );
       }
     }
   }

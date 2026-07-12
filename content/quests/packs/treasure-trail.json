@@ -13,9 +13,17 @@
         ".11..11.",
         ".11..11.",
         ".11..11.",
-        "........"
+        "111.1111"
       ],
-      "goal": { "type": "score", "target": 250 }
+      "goal": {
+        "type": "score",
+        "target": 250
+      },
+      "tray": [
+        "single",
+        "square2",
+        "line2h"
+      ]
     },
     {
       "id": "t02",
@@ -27,9 +35,20 @@
         ".b....r.",
         ".00..00.",
         "........",
-        "........"
+        "0000.000"
       ],
-      "goal": { "type": "gems", "counts": { "red": 2, "blue": 2 } }
+      "goal": {
+        "type": "gems",
+        "counts": {
+          "red": 2,
+          "blue": 2
+        }
+      },
+      "tray": [
+        "single",
+        "line3h",
+        "line2v"
+      ]
     },
     {
       "id": "t03",
@@ -41,9 +60,17 @@
         "2......2",
         "2......2",
         ".2....2.",
-        "..2222.."
+        "2222222."
       ],
-      "goal": { "type": "score", "target": 350 }
+      "goal": {
+        "type": "score",
+        "target": 350
+      },
+      "tray": [
+        "single",
+        "line2v",
+        "corner3sw"
+      ]
     },
     {
       "id": "t04",
@@ -57,21 +84,39 @@
         "........",
         "........"
       ],
-      "goal": { "type": "gems", "counts": { "purple": 3 } }
+      "goal": {
+        "type": "gems",
+        "counts": {
+          "purple": 3
+        }
+      },
+      "tray": [
+        "line5v",
+        "line2h",
+        "square2"
+      ]
     },
     {
       "id": "t05",
       "board": [
         "6..66..6",
         "6..66..6",
-        "........",
+        "66....66",
         "66....66",
         "66....66",
         "........",
         "6..66..6",
         "6..66..6"
       ],
-      "goal": { "type": "score", "target": 450 }
+      "goal": {
+        "type": "score",
+        "target": 450
+      },
+      "tray": [
+        "single",
+        "line2h",
+        "rect2x3"
+      ]
     },
     {
       "id": "t06",
@@ -83,14 +128,25 @@
         "........",
         "........",
         ".4....4.",
-        "g......y"
+        "g.44444y"
       ],
-      "goal": { "type": "gems", "counts": { "yellow": 2, "green": 2 } }
+      "goal": {
+        "type": "gems",
+        "counts": {
+          "yellow": 2,
+          "green": 2
+        }
+      },
+      "tray": [
+        "single",
+        "line3v",
+        "square2"
+      ]
     },
     {
       "id": "t07",
       "board": [
-        ".77..77.",
+        "7777777.",
         "7..77..7",
         "7..77..7",
         ".77..77.",
@@ -99,8 +155,16 @@
         "7..77..7",
         ".77..77."
       ],
-      "goal": { "type": "score", "target": 550 },
-      "hard": true
+      "goal": {
+        "type": "score",
+        "target": 550
+      },
+      "hard": true,
+      "tray": [
+        "single",
+        "line2v",
+        "corner3ne"
+      ]
     },
     {
       "id": "t08",
@@ -112,15 +176,25 @@
         "b.......",
         "........",
         "..1.....",
-        "........"
+        "4444.444"
       ],
-      "goal": { "type": "gems", "counts": { "blue": 4 } },
-      "hard": true
+      "goal": {
+        "type": "gems",
+        "counts": {
+          "blue": 4
+        }
+      },
+      "hard": true,
+      "tray": [
+        "single",
+        "line2h",
+        "line3v"
+      ]
     },
     {
       "id": "t09",
       "board": [
-        "11.11.11",
+        "11.11111",
         "1......1",
         "........",
         "11....11",
@@ -129,8 +203,16 @@
         "1......1",
         "11.11.11"
       ],
-      "goal": { "type": "score", "target": 650 },
-      "hard": true
+      "goal": {
+        "type": "score",
+        "target": 650
+      },
+      "hard": true,
+      "tray": [
+        "single",
+        "line2v",
+        "square2"
+      ]
     },
     {
       "id": "t10",
@@ -142,10 +224,21 @@
         ".3....3.",
         "........",
         "p......p",
-        "...r...."
+        "333r.333"
       ],
-      "goal": { "type": "gems", "counts": { "red": 3, "purple": 3 } },
-      "hard": true
+      "goal": {
+        "type": "gems",
+        "counts": {
+          "red": 3,
+          "purple": 3
+        }
+      },
+      "hard": true,
+      "tray": [
+        "single",
+        "line2h",
+        "line3v"
+      ]
     }
   ]
 }
