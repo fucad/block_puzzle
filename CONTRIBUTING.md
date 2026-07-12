@@ -22,6 +22,49 @@ call other than the quest-content fetch from this repo.
 - **Art, sound, translations** — must be original or CC BY-compatible,
   with provenance stated in the PR.
 
+## Git workflow
+
+`main` is the release branch — **merging to `main` publishes quest
+content to players immediately** (the app fetches `content/quests/`
+from it). Never commit to `main` directly; everything lands via PR.
+
+**Branches:** `<type>/<short-topic>`, e.g. `feat/wood-theme`,
+`fix/tray-hitbox`, `content/winter-2026-pack`.
+
+**Commits:** [Conventional Commits](https://www.conventionalcommits.org):
+
+```
+<type>(<optional scope>): <imperative summary, ≤72 chars>
+
+Body: what problem this solves and WHY this approach — the decision
+context a reviewer or future contributor can't get from the diff.
+```
+
+Types used here:
+
+| type | for |
+|------|-----|
+| `feat` | player-visible features |
+| `fix` | bug fixes (state the root cause in the body) |
+| `content` | quest packs and other data-only changes |
+| `docs` | documentation only |
+| `test` | tests only |
+| `refactor` | no behavior change |
+| `perf` | performance |
+| `chore` | tooling, deps, CI, release plumbing |
+
+Scopes (optional, use when it helps): `engine`, `game`, `ui`, `state`,
+`services`, `quests`, `audio`, `android`, `ios`.
+
+**PRs:** one logical change per PR; squash-merge so `main` stays
+one-change-per-commit; the squash title must itself be a valid
+conventional commit. If AI assistance produced part of the change, keep
+whatever attribution trailer your tool adds (e.g. `Co-Authored-By`) —
+transparency is part of the project ethos.
+
+History note: commits before v0.1 predate this rule and use milestone
+prefixes (`M2b: ...`); the convention applies from v0.1 onward.
+
 ## Working on the code
 
 Read [ARCHITECTURE.md](ARCHITECTURE.md) first — the core invariant is

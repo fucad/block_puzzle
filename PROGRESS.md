@@ -172,6 +172,14 @@ lose-screen/80%-banner visual eyeballing during play, a CI workflow
 - Session ended mid slice-D device verification at user request; all
   code committed on `dev`, working tree clean, 43/43 tests green.
 
+### 2026-07-12 — Git workflow rule adopted
+- Conventional Commits + typed branches + squash-merge PRs to `main`,
+  documented in CONTRIBUTING.md. Chosen because it's the de-facto OSS
+  standard, machine-parseable (future changelog automation), and gives
+  AI-assisted contributors an unambiguous format. `content` type added
+  for quest packs since merging those to main publishes them to players.
+  Applies from v0.1 forward; earlier milestone-prefixed history stands.
+
 ### 2026-07-12 — M3 quest mode (all four slices)
 - Board-string format (`.`/digits/gem letters) promoted from the test
   helper into lib/models/board_strings.dart — quest packs, tests, and
