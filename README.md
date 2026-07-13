@@ -1,5 +1,7 @@
 # Block Puzzle
 
+[![CI](https://github.com/fucad/block_puzzle/actions/workflows/ci.yml/badge.svg)](https://github.com/fucad/block_puzzle/actions/workflows/ci.yml)
+
 An open-source, ad-free block puzzle game (Block Blast style). Free
 forever, on Android and iOS. Part of the
 [Free Ad-free Games](PURPOSE.md) project: **zero extraction** — no
