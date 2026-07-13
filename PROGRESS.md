@@ -172,6 +172,22 @@ lose-screen/80%-banner visual eyeballing during play, a CI workflow
 - Session ended mid slice-D device verification at user request; all
   code committed on `dev`, working tree clean, 43/43 tests green.
 
+### 2026-07-13 — CI live
+- GitHub Actions on every PR + push to main/dev: format, analyze,
+  tests, quest-content validation, Android debug build (~5 min, free
+  on public repos). Both branches green; badge in README.
+- Goldens are LOCAL-ONLY: Linux renders them >1% different from the
+  macOS-generated files (proved by a split CI step), and adopting
+  Linux renders needs authenticated artifact access we don't have.
+  A tolerant comparator (1% pixel diff) stays for machine-to-machine
+  drift. Follow-up: a golden-update workflow committing Linux renders
+  would make CI the source of truth.
+- Process lesson (cost: one broken push): piping flutter analyze/test
+  through `tail` swallows exit codes — the pre-push gate must let the
+  real exit codes gate the chain. CI now catches this class anyway.
+- USER TODO: branch protection on main (Settings → Branches → add rule
+  for main: require PR + require the "checks" status) — gives CI teeth.
+
 ### 2026-07-12 — Privacy, issue templates, fucad splash
 - PRIVACY.md ("we collect nothing", store-submittable via its GitHub
   URL) + the same policy in-app: Settings → Privacy dialog, offline.
