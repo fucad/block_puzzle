@@ -3,3 +3,5 @@ tags:
   # Run with: flutter test <file> --tags icon-gen --run-skipped
   icon-gen:
     skip: "asset generator - run explicitly"
+  # Screen goldens; separated so CI can report them as their own step.
+  golden:

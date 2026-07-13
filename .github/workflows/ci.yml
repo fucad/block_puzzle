@@ -36,8 +36,13 @@ jobs:
       - name: Analyze
         run: flutter analyze
 
+      # Split so a cross-platform golden hiccup is distinguishable from a
+      # real test failure by step conclusion alone.
       - name: Test
-        run: flutter test
+        run: flutter test --exclude-tags golden
+
+      - name: Goldens
+        run: flutter test --tags golden
 
       - name: Validate quest content
         run: dart run tool/validate_quests.dart
