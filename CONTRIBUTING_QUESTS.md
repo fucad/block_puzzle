@@ -1,9 +1,10 @@
 # CONTRIBUTING_QUESTS.md — how to author a quest pack
 
-Quest packs are plain JSON files in this repo. When your pull request is
-merged, the pack goes live for every player **without an app-store
-release** — the app fetches `content/quests/` from GitHub at launch.
-No programming required.
+Quest packs are plain JSON files in this repo. Once your pull request is
+merged and promoted to `main` (quick for content — see CONTRIBUTING.md),
+the pack goes live for every player **without an app-store release** —
+the app fetches `content/quests/` from GitHub at launch. No programming
+required.
 
 ## The files
 

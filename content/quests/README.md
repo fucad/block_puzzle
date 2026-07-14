@@ -1,8 +1,8 @@
 # Quest content
 
-These JSON files ARE the live quest levels — when a change here merges
-to `main`, every player receives it on their next launch, no app update
-needed.
+These JSON files ARE the live quest levels — `main` is what players'
+apps download, and content changes get promoted from `dev` to `main`
+quickly after merging. No app update needed, ever.
 
 **Want to author levels?** Full guide: [CONTRIBUTING_QUESTS.md](../../CONTRIBUTING_QUESTS.md)
 (kept at the repo root where GitHub surfaces contribution docs).

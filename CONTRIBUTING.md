@@ -24,11 +24,19 @@ call other than the quest-content fetch from this repo.
 
 ## Git workflow
 
-`main` is the release branch — **merging to `main` publishes quest
-content to players immediately** (the app fetches `content/quests/`
-from it). Never commit to `main` directly; everything lands via PR.
+Two long-lived branches:
 
-**Branches:** `<type>/<short-topic>`, e.g. `feat/wood-theme`,
+- **`main`** — the live branch. The app fetches `content/quests/` from
+  it, so **whatever is on `main` is what players have**. Protected:
+  PRs only, CI must be green.
+- **`dev`** — the integration branch. All work lands here first.
+
+The flow: topic branch → PR into `dev` → maintainers periodically
+**promote `dev` to `main`** (a merge-commit PR). App-code changes batch
+up into release promotions; content-only changes get promoted quickly
+so new quest packs reach players without waiting on a release.
+
+**Branches:** `<type>/<short-topic>` off `dev`, e.g. `feat/wood-theme`,
 `fix/tray-hitbox`, `content/winter-2026-pack`.
 
 **Commits:** [Conventional Commits](https://www.conventionalcommits.org):
@@ -56,18 +64,20 @@ Types used here:
 Scopes (optional, use when it helps): `engine`, `game`, `ui`, `state`,
 `services`, `quests`, `audio`, `android`, `ios`.
 
-**PRs:** one logical change per PR; squash-merge so `main` stays
-one-change-per-commit; the squash title must itself be a valid
-conventional commit. If AI assistance produced part of the change, keep
-whatever attribution trailer your tool adds (e.g. `Co-Authored-By`) —
-transparency is part of the project ethos.
+**PRs:** one logical change per PR, targeting `dev`; squash-merged so
+`dev` stays one-change-per-commit, with the squash title itself a valid
+conventional commit. Promotions `dev` → `main` use a merge commit
+(keeping the shared history) titled e.g. `chore(promote): quest packs`
+or `chore(release): v0.2.0`. If AI assistance produced part of the
+change, keep whatever attribution trailer your tool adds (e.g.
+`Co-Authored-By`) — transparency is part of the project ethos.
 
 History note: commits before v0.1 predate this rule and use milestone
 prefixes (`M2b: ...`); the convention applies from v0.1 onward.
 
 ## Opening a PR, step by step
 
-1. **Fork** the repo (external contributors) or branch off `main`.
+1. **Fork** the repo (external contributors) or branch off `dev`.
 2. **Branch**: `<type>/<short-topic>` (e.g. `content/winter-pack`).
 3. Make the change; keep it to one logical thing. If you're unsure the
    idea will be accepted, open an issue first and save yourself work.
@@ -78,15 +88,16 @@ prefixes (`M2b: ...`); the convention applies from v0.1 onward.
    ```
 5. Exercise your change in the app on a device or emulator; grab a
    screenshot for anything visual (capture recipes: docs/DEV_NOTES.md).
-6. **Open the PR** against `main` with a conventional-commit title. The
+6. **Open the PR** against `dev` with a conventional-commit title. The
    template will prompt you for the why and the checklist.
 7. **Review**: a maintainer reviews for correctness, the architecture
    rules (pure logic stays in `lib/systems`/`lib/models`), and the
    zero-extraction principles. Expect questions about *why* rather than
    nitpicks about style — the formatter owns style.
-8. **Merge**: maintainers squash-merge. For quest packs, the moment it
-   lands on `main`, players receive it — no release needed. That is the
-   fun part, and the reason review is careful.
+8. **Merge & promote**: maintainers squash-merge into `dev`, then
+   promote `dev` → `main` — quickly for quest content (players receive
+   it on their next launch, no release needed — that's the fun part,
+   and the reason review is careful), in batches for app code.
 
 ## Working on the code
 
