@@ -172,6 +172,14 @@ lose-screen/80%-banner visual eyeballing during play, a CI workflow
 - Session ended mid slice-D device verification at user request; all
   code committed on `dev`, working tree clean, 43/43 tests green.
 
+### 2026-07-14 — Branching model formalized (user decision)
+- Topic branches → PR into `dev` (squash) → periodic promotion
+  `dev` → `main` (merge commit). Content-only promotions happen fast
+  since players get content from `main`; app code batches into release
+  promotions. Docs updated (CONTRIBUTING, PR template, quest guides).
+  Direct pushes to `dev` end now that contributors are expected; `main`
+  is already rule-protected — a `dev` rule can follow when desired.
+
 ### 2026-07-13 — CI live
 - GitHub Actions on every PR + push to main/dev: format, analyze,
   tests, quest-content validation, Android debug build (~5 min, free
