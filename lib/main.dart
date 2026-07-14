@@ -26,6 +26,8 @@ class BlockPuzzleApp extends StatelessWidget {
     return MaterialApp(
       title: 'Block Puzzle',
       debugShowCheckedModeBanner: false,
+      // Perf diagnosis: flutter run --profile --dart-define=PERF=true
+      showPerformanceOverlay: const bool.fromEnvironment('PERF'),
       theme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.dark,

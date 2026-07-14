@@ -172,6 +172,24 @@ lose-screen/80%-banner visual eyeballing during play, a CI workflow
 - Session ended mid slice-D device verification at user request; all
   code committed on `dev`, working tree clean, 43/43 tests green.
 
+### 2026-07-14 — Playtest round 2: colors, slowdown investigation
+- Block palette brightened (user: too dark next to genre peers);
+  icon/splash regenerated to match.
+- "Slows down over time + stutters" investigated in profile mode with
+  the new PERF overlay define + a component-census log:
+  * NOT a leak: PSS flat (~100MB) across 36 effect-heavy cycles and
+    census pinned at exactly 7 components — all effects clean up.
+  * Primary suspect: sustained 60fps rendering of a turn-based game
+    thermally throttling phones (Z Flip3 = Snapdragon 888). Fix: the
+    engine now auto-pauses after 1s of no animation and wakes on any
+    interaction — verified (identical frames while idle, census
+    silent, drag responds instantly from pause).
+  * The census caught a real bug in the first pause implementation:
+    FlameGame's built-in children (World/Camera/DragDispatcher) made a
+    blacklist check read "always animating"; switched to whitelisting
+    transient effect types.
+  * Thermal confirmation on the Z Flip3 needs the phone replugged.
+
 ### 2026-07-14 — Branching model formalized (user decision)
 - Topic branches → PR into `dev` (squash) → periodic promotion
   `dev` → `main` (merge commit). Content-only promotions happen fast
