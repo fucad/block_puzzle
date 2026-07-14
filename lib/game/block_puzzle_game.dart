@@ -1,6 +1,8 @@
 import 'dart:ui';
 
+import 'package:flame/components.dart';
 import 'package:flame/game.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/game_state.dart';
 import '../models/game_theme.dart';
@@ -69,12 +71,68 @@ class BlockPuzzleGame extends FlameGame {
     shakeAmplitude = amplitude;
     _shakeDuration = duration;
     _shakeTime = duration;
+    poke();
   }
+
+  // --- idle auto-pause -------------------------------------------------
+  // A turn-based puzzle has no business rendering 60fps while the player
+  // thinks: sustained GPU load slowly heats phones into thermal
+  // throttling (reported as "gets slow after a while"). When nothing is
+  // animating, the engine pauses; any interaction resumes it.
+  static const _idleAfterSeconds = 1.0;
+  double _idleTime = 0;
+
+  /// Set by the tray piece while a drag is in flight.
+  bool dragActive = false;
+
+  // Whitelist the transient effect types rather than blacklisting the
+  // static ones: FlameGame owns permanent built-ins (World, Camera,
+  // MultiDragDispatcher) that a blacklist would misread as "animating"
+  // forever — which is exactly the bug the component census caught.
+  bool get _animating =>
+      dragActive ||
+      shaking ||
+      state.combo >= comboGlowMin || // glow frame animates continuously
+      children.any(
+        (c) =>
+            c is ParticleSystemComponent ||
+            c is RectangleComponent ||
+            c is TextComponent,
+      );
+
+  /// Resets the idle clock and wakes the engine if it was paused.
+  void poke() {
+    _idleTime = 0;
+    if (paused) resumeEngine();
+  }
+
+  double _censusClock = 0;
 
   @override
   void update(double dt) {
     super.update(dt);
     if (_shakeTime > 0) _shakeTime = (_shakeTime - dt).clamp(0, _shakeTime);
+
+    if (_animating) {
+      _idleTime = 0;
+    } else {
+      _idleTime += dt;
+      if (_idleTime >= _idleAfterSeconds && !paused) pauseEngine();
+    }
+
+    // Leak canary for the "slows down over time" report: logs the live
+    // component population so any accumulation is visible in logcat.
+    if (kDebugMode || kProfileMode) {
+      _censusClock += dt;
+      if (_censusClock > 5) {
+        _censusClock = 0;
+        final counts = <String, int>{};
+        for (final c in children) {
+          counts.update('${c.runtimeType}', (v) => v + 1, ifAbsent: () => 1);
+        }
+        debugPrint('census: ${children.length} components $counts');
+      }
+    }
   }
 
   List<String?> _renderedTray = const [];
@@ -93,6 +151,7 @@ class BlockPuzzleGame extends FlameGame {
   void syncState(GameState next) {
     state = next;
     if (!_sameTray(next.tray)) _rebuildTray();
+    poke();
   }
 
   bool _sameTray(List<String?> tray) {

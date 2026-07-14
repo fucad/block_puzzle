@@ -68,6 +68,9 @@ class TrayPieceComponent extends PositionComponent
   void onDragStart(DragStartEvent event) {
     super.onDragStart(event);
     _dragging = true;
+    game
+      ..poke() // wake from idle pause before anything animates
+      ..dragActive = true;
     _grabPoint = event.canvasPosition.clone();
     priority = 100;
     scale = Vector2.all(_boardCell / _trayCell);
@@ -101,6 +104,7 @@ class TrayPieceComponent extends PositionComponent
     super.onDragEnd(event);
     if (!_dragging) return;
     _dragging = false;
+    game.dragActive = false;
     final dropped = game.tryPlace(trayIndex, _topLeftCorner());
     game.clearPreview();
     if (dropped == null) _returnToTray();
@@ -112,7 +116,10 @@ class TrayPieceComponent extends PositionComponent
   void onDragCancel(DragCancelEvent event) {
     super.onDragCancel(event);
     _dragging = false;
-    game.clearPreview();
+    game
+      ..dragActive = false
+      ..clearPreview()
+      ..poke(); // let the bounce-back animation run
     _returnToTray();
   }
 

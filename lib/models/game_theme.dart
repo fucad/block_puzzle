@@ -12,7 +12,7 @@ const Map<GemColor, Color> gemColors = {
 };
 
 /// Blocks that carry a gem render in gold regardless of theme palette.
-const Color gemBlockGold = Color(0xFFD9A441);
+const Color gemBlockGold = Color(0xFFE8B454);
 
 /// Visual skin for the board and blocks. All rendering colors come from
 /// here so new themes are pure data (a contribution target — never locked
@@ -69,15 +69,17 @@ const GameTheme defaultTheme = GameTheme(
   boardBackground: Color(0xFF232F56),
   emptyCell: Color(0xFF2B3963),
   gridLine: Color(0xFF1C2645),
+  // Brightened after playtest feedback (2026-07-14): the original set
+  // read too dark on real phone panels next to genre peers.
   blockPalette: [
-    Color(0xFFE94F4F), // 0 red
-    Color(0xFF4FC356), // 1 green
-    Color(0xFFF08A24), // 2 orange
-    Color(0xFFF2C94C), // 3 yellow
-    Color(0xFF3D7BF5), // 4 blue
-    Color(0xFF9B51E0), // 5 purple
-    Color(0xFF2FBFDE), // 6 cyan
-    Color(0xFFEE5FA7), // 7 pink
+    Color(0xFFFF6161), // 0 red
+    Color(0xFF59D96A), // 1 green
+    Color(0xFFFFA033), // 2 orange
+    Color(0xFFFFD84D), // 3 yellow
+    Color(0xFF4D9BFF), // 4 blue
+    Color(0xFFBB6BFF), // 5 purple
+    Color(0xFF3FD9F5), // 6 cyan
+    Color(0xFFFF7BC4), // 7 pink
   ],
   ghostOverlay: Color(0x66FFFFFF),
   lineHighlight: Color(0xAAFFF176),
