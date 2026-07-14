@@ -1,6 +1,7 @@
-# Every PR and push runs the same checks as the local definition of done
-# (CONTRIBUTING.md). The quest validator is the critical gate: merging
-# content to main ships it to players immediately.
+# Path-aware CI: content-only PRs run just the quest validator, code
+# changes run the full suite, and the slow Android build only runs for
+# main-bound changes. The aggregate job is named "checks" because that
+# exact name is the required status in the main branch rule.
 name: CI
 
 on:
@@ -10,44 +11,113 @@ on:
     branches: [main, dev]
 
 jobs:
-  checks:
+  changes:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+      content: ${{ steps.filter.outputs.content }}
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-java@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
         with:
-          distribution: temurin
-          java-version: '17'
+          filters: |
+            code:
+              - 'lib/**'
+              - 'test/**'
+              - 'tool/**'
+              - 'assets/**'
+              - 'android/**'
+              - 'ios/**'
+              - 'pubspec.yaml'
+              - 'pubspec.lock'
+              - 'analysis_options.yaml'
+              - 'dart_test.yaml'
+              - '.github/workflows/**'
+            content:
+              - 'content/quests/**'
+              - 'tool/validate_quests.dart'
+              - 'lib/services/quest_validation.dart'
 
-      # Pinned to the version the goldens were generated with.
+  # Fast gate for quest packs — the check that protects players.
+  content:
+    needs: changes
+    if: needs.changes.outputs.content == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
           flutter-version: '3.44.1'
           cache: true
-
       - run: flutter pub get
-
-      - name: Format
-        run: dart format --output=none --set-exit-if-changed .
-
-      - name: Analyze
-        run: flutter analyze
-
-      # Goldens are excluded here: they were generated on macOS and Linux
-      # renders them >1% different (verified on run #2), and adopting
-      # Linux-rendered goldens needs authenticated artifact access we
-      # don't have set up. They still run in every local `flutter test`.
-      # Follow-up idea: a golden-update workflow that commits
-      # Linux-rendered goldens, making CI the source of truth.
-      - name: Test
-        run: flutter test --exclude-tags golden
-
       - name: Validate quest content
         run: dart run tool/validate_quests.dart
 
-      # Catches Gradle/manifest breakage (a real bug class here already).
+  code:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.44.1'
+          cache: true
+      - run: flutter pub get
+      - name: Format
+        run: dart format --output=none --set-exit-if-changed .
+      - name: Analyze
+        run: flutter analyze
+      # Goldens are local-only: Linux renders them >1% different from
+      # the macOS-generated files (see PROGRESS.md 2026-07-13).
+      - name: Test
+        run: flutter test --exclude-tags golden
+
+  # Gradle/manifest breakage gate; slow, so only for main-bound changes
+  # (promotion PRs and pushes to main).
+  android-build:
+    needs: changes
+    if: >-
+      needs.changes.outputs.code == 'true' &&
+      (github.base_ref == 'main' ||
+       (github.event_name == 'push' && github.ref == 'refs/heads/main'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: '3.44.1'
+          cache: true
+      - run: flutter pub get
       - name: Android debug build
         run: flutter build apk --debug
+
+  # Aggregate: the one required status. Fails if any needed job failed;
+  # passes when jobs were skipped by the path filters.
+  checks:
+    needs: [changes, content, code, android-build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify job results
+        run: |
+          for result in "${{ needs.changes.result }}" \
+                        "${{ needs.content.result }}" \
+                        "${{ needs.code.result }}" \
+                        "${{ needs.android-build.result }}"; do
+            echo "job result: $result"
+            if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
+              exit 1
+            fi
+          done
