@@ -1,4 +1,5 @@
 <!--
+Target branch: dev (main only receives dev-promotion PRs).
 Title must be a Conventional Commit — it becomes the squash commit:
   feat(ui): ... | fix(engine): ... | content(quests): ... | docs: ...
 -->
@@ -22,7 +23,8 @@ Title must be a Conventional Commit — it becomes the squash commit:
 - [ ] `dart run tool/validate_quests.dart --update` then
       `dart run tool/validate_quests.dart` prints OK
 - [ ] Playtested the new stages (opening break feels good)
-- [ ] I understand merging to `main` ships this to players immediately
+- [ ] I understand this ships to players as soon as `dev` is promoted
+      to `main` (fast for content merges)
 
 ## Screenshots
 
