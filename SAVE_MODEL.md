@@ -27,12 +27,23 @@ silently discarding progress.
   "allTimeBestCombo": 0,       // best combo streak ever (Combo Master screen)
   "classicRun": null,          // in-progress classic run, or null
   "classicRunSeed": "12345",   // seed that run started from (string int64)
+  "questRun": null,            // in-progress quest attempt (GameState), or absent
+  "questRunPackId": "starter", // which pack/stage/level the questRun belongs to
+  "questRunStageId": "s07",    //   (the stage isn't stored in GameState, so the
+  "questRunLevelNumber": 7,    //    map reattaches it from the catalog on resume)
   "questCompleted": {          // packId -> sorted stage ids completed
     "starter": ["s01", "s02"]
   },
   "lastQuestFetchEpochMs": null // throttle for the GitHub manifest fetch
 }
 ```
+
+The four `questRun*` keys are additive and only emitted while a quest
+attempt is in progress; they are dropped together when the stage is won,
+lost, or restarted from scratch. Like the classic run, `questRun` is a
+`GameState` snapshot (board, tray, RNG, score, gems), so resuming needs no
+replay — the map screen looks up the pack/stage by id from the loaded
+catalog and hands the saved `GameState` back to the controller.
 
 ### `classicRun` (GameState snapshot)
 

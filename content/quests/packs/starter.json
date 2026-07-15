@@ -17,7 +17,7 @@
       ],
       "goal": {
         "type": "score",
-        "target": 150
+        "target": 500
       },
       "tray": [
         "line3h",
@@ -39,7 +39,7 @@
       ],
       "goal": {
         "type": "score",
-        "target": 250
+        "target": 600
       },
       "tray": [
         "line2h",
@@ -62,7 +62,9 @@
       "goal": {
         "type": "gems",
         "counts": {
-          "red": 8
+          "red": 4,
+          "blue": 4,
+          "green": 4
         }
       },
       "seed": 7,
@@ -86,7 +88,7 @@
       ],
       "goal": {
         "type": "score",
-        "target": 350
+        "target": 650
       },
       "tray": [
         "tDown",
@@ -109,7 +111,9 @@
       "goal": {
         "type": "gems",
         "counts": {
-          "purple": 8
+          "purple": 4,
+          "yellow": 4,
+          "red": 4
         }
       },
       "tray": [
@@ -132,7 +136,7 @@
       ],
       "goal": {
         "type": "score",
-        "target": 450
+        "target": 750
       },
       "tray": [
         "sH",
@@ -155,8 +159,9 @@
       "goal": {
         "type": "gems",
         "counts": {
-          "red": 6,
-          "purple": 6
+          "red": 5,
+          "purple": 5,
+          "blue": 5
         }
       },
       "tray": [
@@ -179,7 +184,7 @@
       ],
       "goal": {
         "type": "score",
-        "target": 500
+        "target": 850
       },
       "hard": true,
       "tray": [
@@ -203,7 +208,9 @@
       "goal": {
         "type": "gems",
         "counts": {
-          "blue": 8
+          "blue": 5,
+          "green": 5,
+          "yellow": 5
         }
       },
       "tray": [
@@ -226,7 +233,7 @@
       ],
       "goal": {
         "type": "score",
-        "target": 600
+        "target": 950
       },
       "tray": [
         "corner3se",
@@ -249,8 +256,10 @@
       "goal": {
         "type": "gems",
         "counts": {
-          "green": 6,
-          "red": 6
+          "green": 5,
+          "red": 5,
+          "blue": 5,
+          "purple": 5
         }
       },
       "tray": [
@@ -273,7 +282,7 @@
       ],
       "goal": {
         "type": "score",
-        "target": 700
+        "target": 1050
       },
       "hard": true,
       "tray": [
@@ -297,7 +306,10 @@
       "goal": {
         "type": "gems",
         "counts": {
-          "purple": 8
+          "purple": 6,
+          "yellow": 6,
+          "red": 6,
+          "green": 6
         }
       },
       "seed": 99,
@@ -322,7 +334,7 @@
       ],
       "goal": {
         "type": "score",
-        "target": 800
+        "target": 1200
       },
       "tray": [
         "corner5sw",
@@ -347,7 +359,9 @@
         "counts": {
           "red": 5,
           "purple": 5,
-          "yellow": 5
+          "yellow": 5,
+          "blue": 5,
+          "green": 5
         }
       },
       "hard": true,

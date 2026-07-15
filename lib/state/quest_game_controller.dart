@@ -9,8 +9,9 @@ import 'providers.dart';
 
 enum QuestStatus { playing, won, lost }
 
-/// One quest attempt. Unlike Classic, attempts are not persisted — a
-/// closed stage restarts from its layout (reference behavior).
+/// One quest attempt. The in-progress state is persisted (see
+/// [SaveDataNotifier.storeQuestRun]) so leaving the stage or killing the
+/// app resumes exactly where the player left off.
 class QuestRun {
   const QuestRun({
     required this.pack,
@@ -72,7 +73,7 @@ class QuestGameController extends Notifier<QuestRun?> {
       GemsGoal(counts: final c) => c,
       ScoreGoal() => const <GemColor, int>{},
     };
-    state = QuestRun(
+    final run = QuestRun(
       pack: pack,
       stage: stage,
       levelNumber: levelNumber,
@@ -84,6 +85,26 @@ class QuestGameController extends Notifier<QuestRun?> {
       ),
       status: QuestStatus.playing,
     );
+    state = run;
+    _persist(run);
+  }
+
+  /// Resumes a persisted in-progress attempt: the saved [game] state on the
+  /// stage it belongs to. Pack/stage come from the catalog (the caller has
+  /// them) since they aren't in the save.
+  void resume(
+    QuestPack pack,
+    QuestStage stage, {
+    required int levelNumber,
+    required GameState game,
+  }) {
+    state = QuestRun(
+      pack: pack,
+      stage: stage,
+      levelNumber: levelNumber,
+      game: game,
+      status: QuestStatus.playing,
+    );
   }
 
   void retry() {
@@ -93,6 +114,15 @@ class QuestGameController extends Notifier<QuestRun?> {
     }
   }
 
+  void _persist(QuestRun run) => ref
+      .read(saveDataProvider.notifier)
+      .storeQuestRun(
+        run.game,
+        packId: run.pack.id,
+        stageId: run.stage.id,
+        levelNumber: run.levelNumber,
+      );
+
   /// Win beats lose when the goal lands on the final possible move.
   PlacementOutcome? place(int trayIndex, int row, int col) {
     final run = state;
@@ -101,18 +131,29 @@ class QuestGameController extends Notifier<QuestRun?> {
     if (outcome == null) return null;
 
     var status = QuestStatus.playing;
+    final save = ref.read(saveDataProvider.notifier);
     if (goalMet(run.stage.goal, outcome.state)) {
       status = QuestStatus.won;
-      ref
-          .read(saveDataProvider.notifier)
-          .markStageCompleted(run.pack.id, run.stage.id);
+      save
+        ..markStageCompleted(run.pack.id, run.stage.id)
+        ..clearQuestRun();
     } else if (GameEngine.isGameOver(outcome.state)) {
       status = QuestStatus.lost;
+      save.clearQuestRun();
+    } else {
+      save.storeQuestRun(
+        outcome.state,
+        packId: run.pack.id,
+        stageId: run.stage.id,
+        levelNumber: run.levelNumber,
+      );
     }
     state = run.copyWith(game: outcome.state, status: status);
     return outcome;
   }
 
+  /// Leaving the stage mid-play keeps the persisted snapshot so the map can
+  /// resume it; only the in-memory run is dropped.
   void quit() => state = null;
 
   /// Injects an arbitrary run state to set up deterministic tests.

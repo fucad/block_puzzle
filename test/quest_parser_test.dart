@@ -187,12 +187,17 @@ void main() {
     });
 
     test('validator demands a full opening cascade', () {
+      // High score target so the opening-ceiling rule never fires — this
+      // test isolates the cascade contract.
       QuestPack packWith(List<String> board, List<String> tray) =>
           QuestPack.fromJson({
             'schema': 1,
             'id': 'p',
             'title': 'P',
-            'stages': [stageJson(board: board)..['tray'] = tray],
+            'stages': [
+              stageJson(board: board, goal: {'type': 'score', 'target': 5000})
+                ..['tray'] = tray,
+            ],
           });
 
       // Empty board: nothing can break on move one.
@@ -243,6 +248,34 @@ void main() {
         ),
         isEmpty,
       );
+    });
+
+    test('score target must sit above the opening ceiling', () {
+      // The classic s01 layout: the opening can all-clear (+300), so a low
+      // target is rejected while a high one passes.
+      const board = [
+        '........',
+        '........',
+        '........',
+        '........',
+        '........',
+        '11...111',
+        '000..000',
+        '3333.333',
+      ];
+      const tray = ['line3h', 'line2h', 'single'];
+      QuestPack withTarget(int target) => QuestPack.fromJson({
+        'schema': 1,
+        'id': 'p',
+        'title': 'P',
+        'stages': [
+          stageJson(board: board, goal: {'type': 'score', 'target': target})
+            ..['tray'] = tray,
+        ],
+      });
+
+      expect(validatePack(withTarget(200)).single, contains('opening ceiling'));
+      expect(validatePack(withTarget(500)), isEmpty);
     });
   });
 

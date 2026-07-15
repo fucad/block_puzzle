@@ -51,6 +51,21 @@ List<String> validatePack(QuestPack pack) {
       if (target < 50 || target > 20000) {
         problems.add('$where: score target $target out of sane range');
       }
+      // A score stage must not be winnable by the opening tray alone. If
+      // the opening can all-clear, that +300 is included in the ceiling —
+      // the target has to sit above it so real play is required.
+      final tray = stage.tray;
+      if (tray != null) {
+        final pieces = [for (final id in tray) pieceById[id]!];
+        final ceiling = maxOpeningScore(stage.board, pieces);
+        if (target <= ceiling) {
+          problems.add(
+            '$where: score target $target ≤ opening ceiling $ceiling — the '
+            'opening cascade (all-clear bonus included) would win the stage; '
+            'raise the target above $ceiling',
+          );
+        }
+      }
     }
 
     // Opening-cascade contract (strengthened 2026-07-14 after playtest
