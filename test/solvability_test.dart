@@ -94,4 +94,45 @@ void main() {
       );
     });
   });
+
+  group('FitProfile', () {
+    test('snug placement scores higher contact than open space', () {
+      // A 1x1 hole fully enclosed by filled cells: a single dropped there
+      // touches filled neighbours on all 4 sides -> contact 1.0.
+      final enclosed = boardFrom([
+        '........',
+        '........',
+        '........',
+        '...1....',
+        '..1.1...', // hole at (4,3), surrounded by 1s at N/S/E/W
+        '...1....',
+        '........',
+        '........',
+      ]);
+      final single = pieceById['single']!;
+      final snug = FitProfile.of(enclosed, single);
+      expect(snug.fits, isTrue);
+      expect(snug.bestContact, 1.0);
+
+      // Same single on an empty board only ever contacts the border, so
+      // its best snugness is far lower.
+      final open = FitProfile.of(boardFrom(List.filled(8, '........')), single);
+      expect(open.bestContact, lessThan(snug.bestContact));
+    });
+
+    test('reports break capability', () {
+      final board = boardFrom([
+        '........',
+        '........',
+        '........',
+        '........',
+        '........',
+        '........',
+        '........',
+        '1111111.', // single at (7,7) completes row 7
+      ]);
+      final profile = FitProfile.of(board, pieceById['single']!);
+      expect(profile.canBreak, isTrue);
+    });
+  });
 }

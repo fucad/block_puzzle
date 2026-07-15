@@ -69,12 +69,15 @@ save to resume a run mid-tray).
 
 Tray generation algorithm (documented contract, tested):
 
-1. When the tray refills, compute for each catalog piece whether it fits
-   anywhere on the current board, and whether it is a **breaker** (some
-   position completes a line right now).
+1. When the tray refills, compute one `FitProfile` per catalog piece in a
+   single placement scan: whether it **fits**, whether it is a **breaker**
+   (some position completes a line now), and its **bestContact** — the
+   snuggest placement's fraction of outer cell-edges pressed against a
+   filled cell or the border (0 = open space, 1 = fully nestled).
 2. Effective weight = base × `fitPenalty` (0.15) if it does NOT fit ×
-   `breakerBoost` (3.0) if it is a breaker — clearing lines is the core
-   satisfaction, so the deal leans into it.
+   `breakerBoost` (4.0) if it is a breaker × `(1 + bestContact ×
+   snugBoost)` (snugBoost 3.0). Fitting flush into gaps and clearing
+   lines are the satisfactions, so the deal leans hard into both.
 3. Draw a candidate set of 3 (weighted, with replacement); if the whole
    draw is dead while something fits, redraw the last slot from the
    fitting pieces.
