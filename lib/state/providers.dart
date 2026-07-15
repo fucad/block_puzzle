@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/game_theme.dart';
 import '../services/audio_service.dart';
+import '../services/haptic_service.dart';
 import '../services/persistence_service.dart';
 import 'save_data_notifier.dart';
 
@@ -31,5 +32,16 @@ final audioProvider = Provider<AudioService>((ref) {
     (_, next) => service.enabled = next.settings.soundOn,
   );
   ref.onDispose(service.dispose);
+  return service;
+});
+
+final hapticProvider = Provider<HapticService>((ref) {
+  final service = HapticService()
+    ..enabled = ref.read(saveDataProvider).settings.hapticsOn;
+  service.init(); // async capability probe; safe to fire and forget
+  ref.listen(
+    saveDataProvider,
+    (_, next) => service.enabled = next.settings.hapticsOn,
+  );
   return service;
 });

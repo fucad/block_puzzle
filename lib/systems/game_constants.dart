@@ -26,7 +26,13 @@ const double fitPenalty = 0.15;
 /// Weight multiplier for pieces that could complete a line right now.
 /// Breaking lines is the game's core satisfaction, so "breaker" pieces
 /// show up noticeably more often.
-const double breakerBoost = 3.0;
+const double breakerBoost = 4.0;
+
+/// How strongly to favor pieces that slot flush into existing gaps. A
+/// piece's weight is scaled by `1 + bestContact * snugBoost`, so a piece
+/// that nestles perfectly into a hole is up to (1 + snugBoost)× likelier
+/// than one that only lands in open space. Fitting is the point.
+const double snugBoost = 3.0;
 
 /// How many candidate tray sets to draw looking for one that is fully
 /// playable in sequence (and ideally contains a breaker) before settling.

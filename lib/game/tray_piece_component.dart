@@ -6,6 +6,7 @@ import 'package:flame/events.dart';
 import 'package:flutter/animation.dart' show Curves;
 
 import '../models/piece.dart';
+import '../systems/game_constants.dart';
 import 'block_painter.dart';
 import 'block_puzzle_game.dart';
 
@@ -54,14 +55,18 @@ class TrayPieceComponent extends PositionComponent
     }
   }
 
-  // Generous hit area for fat fingers around small pieces.
+  // Grab anywhere in the piece's tray slot, not just on the blocks — a
+  // touch is caught if it's within (roughly) the slot's own zone. The
+  // horizontal half-width is bounded to just under half the slot spacing
+  // so adjacent pieces never fight over a touch; the vertical band is
+  // deliberately tall to cover the whole tray row.
   @override
   bool containsLocalPoint(Vector2 point) {
-    final pad = _trayCell * 0.9;
-    return point.x >= -pad &&
-        point.y >= -pad &&
-        point.x <= size.x + pad &&
-        point.y <= size.y + pad;
+    final center = size / 2;
+    final slotHalf = game.size.x / (2 * traySize) * 0.94;
+    final vHalf = _trayCell * 3;
+    return (point.x - center.x).abs() <= slotHalf &&
+        (point.y - center.y).abs() <= vHalf;
   }
 
   @override

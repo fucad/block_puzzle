@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- The app's ONLY network use: fetching quest packs from GitHub. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Gameplay haptics (place / clear / combo / all-clear). -->
+    <uses-permission android:name="android.permission.VIBRATE" />
     <application
         android:label="Block Puzzle"
         android:name="${applicationName}"
