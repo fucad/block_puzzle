@@ -170,8 +170,10 @@ int maxOpeningScore(Board board, List<Piece> pieces) {
           final broke = result.lineCount > 0;
           final newCombo = broke ? combo + 1 : 0;
           var delta = piece.cells.length * pointsPerCell;
-          if (broke) delta += lineScore(result.lineCount) + comboBonus(newCombo);
-          if (broke && result.board.isEmpty) delta += allClearBonus;
+          if (broke) {
+            delta += lineScore(result.lineCount) + comboBonus(newCombo);
+            if (result.board.isEmpty) delta += allClearBonus;
+          }
           search(result.board, remaining, newCombo, score + delta);
         }
       }

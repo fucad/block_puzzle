@@ -274,10 +274,7 @@ void main() {
         ],
       });
 
-      expect(
-        validatePack(withTarget(200)).single,
-        contains('opening ceiling'),
-      );
+      expect(validatePack(withTarget(200)).single, contains('opening ceiling'));
       expect(validatePack(withTarget(500)), isEmpty);
     });
   });
