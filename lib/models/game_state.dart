@@ -14,12 +14,23 @@ class GameState {
     this.allClears = 0,
     this.clearFocus = false,
     this.gemsCollected = const {},
+    this.trayGems = const [],
+    this.gemGoal = const {},
   });
 
   final Board board;
 
   /// Piece ids of the current tray; `null` = slot already played.
   final List<String?> tray;
+
+  /// Gems carried by each tray slot (quest gem stages): index i maps a
+  /// piece-cell index to a gem color. Empty map = a plain piece. Parallel
+  /// to [tray]; empty overall in classic and non-gem stages.
+  final List<Map<int, GemColor>> trayGems;
+
+  /// The stage's gem target (quest gem stages), so the generator only
+  /// spawns colors still needed. Empty otherwise.
+  final Map<GemColor, int> gemGoal;
 
   /// GameRng state to draw the next tray from.
   final int rngState;
@@ -40,9 +51,15 @@ class GameState {
   /// Gems collected so far this run (quest mode).
   final Map<GemColor, int> gemsCollected;
 
+  /// Gems for tray slot [i], or an empty map if that slot has none.
+  Map<int, GemColor> gemsForSlot(int i) =>
+      i < trayGems.length ? trayGems[i] : const {};
+
   GameState copyWith({
     Board? board,
     List<String?>? tray,
+    List<Map<int, GemColor>>? trayGems,
+    Map<GemColor, int>? gemGoal,
     int? rngState,
     int? score,
     int? combo,
@@ -54,6 +71,8 @@ class GameState {
     return GameState(
       board: board ?? this.board,
       tray: tray ?? this.tray,
+      trayGems: trayGems ?? this.trayGems,
+      gemGoal: gemGoal ?? this.gemGoal,
       rngState: rngState ?? this.rngState,
       score: score ?? this.score,
       combo: combo ?? this.combo,
@@ -75,11 +94,21 @@ class GameState {
     'roundBestCombo': roundBestCombo,
     'allClears': allClears,
     if (clearFocus) 'clearFocus': true,
+    if (trayGems.any((m) => m.isNotEmpty))
+      'trayGems': [
+        for (final m in trayGems)
+          m.map((cell, color) => MapEntry('$cell', color.name)),
+      ],
+    if (gemGoal.isNotEmpty)
+      'gemGoal': gemGoal.map((color, n) => MapEntry(color.name, n)),
     'gems': gemsCollected.map((color, count) => MapEntry(color.name, count)),
   };
 
   factory GameState.fromJson(Map<String, Object?> json) {
     final gems = (json['gems'] as Map? ?? const {}).cast<String, int>();
+    final trayGemsJson = json['trayGems'] as List?;
+    final gemGoalJson = (json['gemGoal'] as Map? ?? const {})
+        .cast<String, int>();
     return GameState(
       board: Board.fromJson(json['board'] as List<Object?>),
       tray: (json['tray'] as List).cast<String?>(),
@@ -90,6 +119,19 @@ class GameState {
       // Tolerant default: saves written before this field existed.
       allClears: json['allClears'] as int? ?? 0,
       clearFocus: json['clearFocus'] as bool? ?? false,
+      trayGems: trayGemsJson == null
+          ? const []
+          : [
+              for (final m in trayGemsJson)
+                {
+                  for (final e in (m as Map).cast<String, String>().entries)
+                    int.parse(e.key): GemColor.values.byName(e.value),
+                },
+            ],
+      gemGoal: {
+        for (final e in gemGoalJson.entries)
+          GemColor.values.byName(e.key): e.value,
+      },
       gemsCollected: {
         for (final entry in gems.entries)
           GemColor.values.byName(entry.key): entry.value,

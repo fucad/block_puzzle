@@ -6,21 +6,21 @@
       "title": "First Steps",
       "release_date": "2026-07-01",
       "file": "packs/starter.json",
-      "checksum": "770475f32eaa716e132fb1de37d1c3cf8cfa53904d018101e77e92a8969ffdfa"
+      "checksum": "8c70a5bdbc7a9a059ef8f106e7d70e5a3dd45f7664f511cd989f5d17f4aae400"
     },
     {
       "id": "deep-dig",
       "title": "Deep Dig",
       "release_date": "2026-07-05",
       "file": "packs/deep-dig.json",
-      "checksum": "8578afdf6304fd3fe8ca1281fb2b2387ab5de383b36b417278d2a437bc518a80"
+      "checksum": "eefa0748debb175ecb710141bb39e4b207fa3850162ad0b746b496c0615690b7"
     },
     {
       "id": "treasure-trail",
       "title": "Treasure Trail",
       "release_date": "2026-07-26",
       "file": "packs/treasure-trail.json",
-      "checksum": "f0b78a9ea566c9b5af0a410e06fb4f4e40b58931536ba329de4764f8c2facc9f"
+      "checksum": "c4e1c2d4edd1831459d9b263a5eb91739d50a3fc9eca2daa67af5553115af2b9"
     }
   ]
 }

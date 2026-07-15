@@ -134,7 +134,7 @@ void main() {
   });
 
   group('playability validation', () {
-    test('flags pre-completed lines and impossible gem goals', () {
+    test('flags pre-completed lines', () {
       final pack = QuestPack.fromJson({
         'schema': 1,
         'id': 'p',
@@ -151,17 +151,17 @@ void main() {
               '........',
               '........',
             ],
+            // Gem goal is satisfiable regardless of the board now (gems
+            // come from the tray), so no gem-impossibility problem.
             goal: {
               'type': 'gems',
-              'counts': {'blue': 1}, // no blue gems on board
+              'counts': {'blue': 5},
             },
           ),
         ],
       });
       final problems = validatePack(pack);
-      expect(problems, hasLength(2));
-      expect(problems.first, contains('pre-completed'));
-      expect(problems.last, contains('blue'));
+      expect(problems.single, contains('pre-completed'));
     });
   });
 

@@ -5,6 +5,7 @@ import 'package:flame/effects.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/animation.dart' show Curves;
 
+import '../models/game_theme.dart';
 import '../models/piece.dart';
 import '../systems/game_constants.dart';
 import 'block_painter.dart';
@@ -46,12 +47,17 @@ class TrayPieceComponent extends PositionComponent
   void render(Canvas canvas) {
     final cellSide = _trayCell;
     final color = game.theme.blockColor(piece.colorId);
-    for (final (r, c) in piece.cells) {
-      paintBlock(
-        canvas,
-        Rect.fromLTWH(c * cellSide, r * cellSide, cellSide, cellSide),
-        color,
+    final gems = game.state.gemsForSlot(trayIndex);
+    for (final (i, (r, c)) in piece.cells.indexed) {
+      final rect = Rect.fromLTWH(
+        c * cellSide,
+        r * cellSide,
+        cellSide,
+        cellSide,
       );
+      paintBlock(canvas, rect, color);
+      final gem = gems[i];
+      if (gem != null) paintGemStar(canvas, rect, gemColors[gem]!);
     }
   }
 

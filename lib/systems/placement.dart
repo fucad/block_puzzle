@@ -27,6 +27,27 @@ Board stamp(Board board, Piece piece, int row, int col) {
   });
 }
 
+/// Like [stamp], but attaches gems to the placed cells: [gems] maps a
+/// piece-cell index (into `piece.cells`) to a gem color. Used for the
+/// quest gem stages where tray pieces carry gems.
+Board stampWithGems(
+  Board board,
+  Piece piece,
+  int row,
+  int col,
+  Map<int, GemColor> gems,
+) {
+  assert(canPlace(board, piece, row, col));
+  final updates = <int, Cell?>{};
+  for (final (i, (r, c)) in piece.cells.indexed) {
+    updates[(row + r) * Board.size + (col + c)] = Cell(
+      piece.colorId,
+      gem: gems[i],
+    );
+  }
+  return board.withUpdates(updates);
+}
+
 /// True if [piece] fits somewhere on [board].
 bool fitsAnywhere(Board board, Piece piece) {
   for (var row = 0; row <= Board.size - piece.height; row++) {

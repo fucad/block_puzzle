@@ -73,16 +73,24 @@ Piece ids are the entries in `lib/models/piece_catalog.dart` (`single`,
 |------|---------|
 | `.` | empty cell |
 | `0`–`7` | block in palette color 0–7 (red, green, orange, yellow, blue, purple, cyan, pink) |
-| `r` `b` `p` `y` `g` | gold block holding a red / blue / purple / yellow / green **gem** |
+| `r` `b` `p` `y` `g` | light tile holding a red / blue / purple / yellow / green **gem** |
 
-Gems are collected when any completed line containing them clears.
+Gems are collected when any completed line containing them clears. For a
+gem GOAL you normally leave these out of the board entirely — gems come
+from the tray (see Goals). The gem letters remain available if you want a
+few decorative pre-placed gems, but they are not required and not counted
+toward what's reachable.
 
 ### Goals
 
 - Score: `{ "type": "score", "target": 700 }` — reach the score.
-- Gems: `{ "type": "gems", "counts": { "red": 2, "purple": 3 } }` —
-  collect all listed gems. Every color you require must actually exist on
-  the board in at least that quantity.
+- Gems: `{ "type": "gems", "counts": { "red": 8, "purple": 6 } }` —
+  collect *at least* the listed count of each color. Gems ride on the
+  generated tray pieces (spawned only for colors you still need), so the
+  goal does NOT depend on gems being pre-placed on the board — you don't
+  put gems in the board at all for a gem goal, and counts can be large.
+  Collecting more than the goal is fine. Once a color is fully collected
+  it stops appearing on new pieces.
 
 ### Rules the validator enforces
 

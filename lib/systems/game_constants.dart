@@ -58,5 +58,13 @@ const double classicOpenBoardFullness = 0.2;
 /// can clear the most lines when played well.
 const int classicDrawAttempts = 14;
 
+// --- Quest gem spawning (gems ride on generated tray pieces) ----------
+
+/// Chance a generated tray piece carries a gem (quest gem stages).
+const double gemSpawnChance = 0.5;
+
+/// Chance a gem-carrying piece of ≥4 cells carries a second gem.
+const double gemSecondChance = 0.25;
+
 /// Search budget for canPlaceAllInSomeOrder; past this, assume playable.
 const int solvabilityNodeCap = 1500;

@@ -98,7 +98,15 @@ class BoardComponent extends PositionComponent
             Paint()..color = theme.emptyCell,
           );
         } else if (occupant.gem != null) {
-          paintBlock(canvas, rect, puzzleBlockLight);
+          // Pre-placed gem tiles are the light substrate; a gem the player
+          // dropped keeps its piece color.
+          paintBlock(
+            canvas,
+            rect,
+            occupant.preplaced
+                ? puzzleBlockLight
+                : theme.blockColor(occupant.colorId),
+          );
           _paintGem(canvas, rect, gemColors[occupant.gem]!);
         } else if (occupant.preplaced) {
           // Pre-placed puzzle blocks share the neutral light tile.

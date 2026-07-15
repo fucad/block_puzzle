@@ -7,7 +7,6 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 
-import '../models/cell.dart';
 import '../models/piece_catalog.dart';
 import '../models/quest.dart';
 import '../systems/line_clear.dart';
@@ -35,18 +34,14 @@ List<String> validatePack(QuestPack pack) {
       problems.add('$where: only $empty empty cells — likely unplayable');
     }
 
+    // Gems now ride on generated tray pieces (spawned only for colors
+    // still needed), so a gem goal is satisfiable regardless of what's on
+    // the board — only sanity-check the counts.
     if (stage.goal case GemsGoal(counts: final counts)) {
-      final onBoard = <GemColor, int>{};
-      for (final cell in stage.board.cells) {
-        final gem = cell?.gem;
-        if (gem != null) onBoard[gem] = (onBoard[gem] ?? 0) + 1;
-      }
       counts.forEach((color, needed) {
-        final available = onBoard[color] ?? 0;
-        if (available < needed) {
+        if (needed < 1 || needed > 60) {
           problems.add(
-            '$where: goal needs $needed ${color.name} gems but the board '
-            'only has $available',
+            '$where: gem goal for ${color.name} is $needed (want 1..60)',
           );
         }
       });
