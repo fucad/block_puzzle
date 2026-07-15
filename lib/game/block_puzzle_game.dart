@@ -57,6 +57,9 @@ class BlockPuzzleGame extends FlameGame {
   late BoardGeometry geometry;
   DragPreview? preview;
 
+  /// Last praise string shown by the effects (reused on Level Complete).
+  String? lastPraise;
+
   // Screen shake, decayed in update(); board rendering reads it.
   double _shakeTime = 0;
   double _shakeDuration = 0;
@@ -216,18 +219,26 @@ class BlockPuzzleGame extends FlameGame {
     );
   }
 
-  /// Closest legal placement to the raw snap (Euclidean in cell space),
-  /// or null if the piece fits nowhere.
+  /// How far (in cells) the snap may forgive an off-target hover. Just
+  /// enough to catch a piece straddling grid lines over an empty area —
+  /// NOT enough to teleport onto a distant gap when the hover is squarely
+  /// over occupied blocks (that should bounce).
+  static const _snapRadius = 1;
+
+  /// Closest legal placement within [_snapRadius] of the raw snap, or null.
   (int, int)? _nearestLegal(Piece piece, int rawRow, int rawCol) {
     final maxRow = Board.size - piece.height;
     final maxCol = Board.size - piece.width;
     if (maxRow < 0 || maxCol < 0) return null;
     (int, int)? best;
     var bestDist = 1 << 30;
-    for (var r = 0; r <= maxRow; r++) {
-      for (var c = 0; c <= maxCol; c++) {
+    for (var dr = -_snapRadius; dr <= _snapRadius; dr++) {
+      for (var dc = -_snapRadius; dc <= _snapRadius; dc++) {
+        final r = rawRow + dr;
+        final c = rawCol + dc;
+        if (r < 0 || c < 0 || r > maxRow || c > maxCol) continue;
         if (!canPlace(state.board, piece, r, c)) continue;
-        final d = (r - rawRow) * (r - rawRow) + (c - rawCol) * (c - rawCol);
+        final d = dr * dr + dc * dc;
         if (d < bestDist) {
           bestDist = d;
           best = (r, c);
@@ -245,7 +256,9 @@ class BlockPuzzleGame extends FlameGame {
     final p = preview;
     if (p == null || !p.legal) return null;
     final outcome = onPlace(trayIndex, p.row, p.col);
-    if (outcome != null) spawnPlacementEffects(this, outcome.events);
+    if (outcome != null) {
+      spawnPlacementEffects(this, outcome.events, outcome.stampedBoard);
+    }
     return outcome;
   }
 }

@@ -172,6 +172,24 @@ lose-screen/80%-banner visual eyeballing during play, a CI workflow
 - Session ended mid slice-D device verification at user request; all
   code committed on `dev`, working tree clean, 43/43 tests green.
 
+### 2026-07-16 — Playtest round 5: 7 polish items
+- Ghost dial-back: nearest-legal snap capped to a 1-cell radius (catches
+  grid-line straddling, no longer teleports onto far gaps; over occupied
+  blocks it bounces).
+- Would-clear line lights up in the dragged piece's color with a bright
+  glow (was a small yellow tint) — matches the reference.
+- Falling-block + gem effects: cleared cells drop a short distance and
+  fade; gem cells instead fly up toward the goal counters. Uses the new
+  PlacementOutcome.stampedBoard (pre-clear colors).
+- Random tiered combo praise ("Good!" → "Legendary!"), shown above the
+  action; the winning praise is reused (animated) on Level Complete.
+- Quest goal banner: centered, animated, at stage start.
+- Restart round: a Settings action (classic restarts the run, quest
+  retries the stage) — classic runs are otherwise persistent.
+- Map advance animation: on Continue, the trail fills from the cleared
+  node to the next, which then lights up (questJustCompletedProvider +
+  fractional _TrailPainter.litUpTo + AnimationController).
+
 ### 2026-07-15 — Playtest round 4: preview, quest colors, classic clears
 - Ghost preview: over the board it now ALWAYS shows a pre-place, snapping
   to the nearest legal cell (forgiving placement); the drop lands there.
