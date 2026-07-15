@@ -68,6 +68,12 @@ class QuestManifest {
   }
 }
 
+/// Short human description of a goal, for the stage-start banner.
+String goalDescription(QuestGoal goal) => switch (goal) {
+  ScoreGoal(target: final t) => 'Reach $t points',
+  GemsGoal() => 'Collect the gems',
+};
+
 sealed class QuestGoal {
   const QuestGoal();
 

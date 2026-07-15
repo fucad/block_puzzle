@@ -5,6 +5,19 @@ import '../services/quest_config.dart';
 import '../services/quest_service.dart';
 import 'providers.dart';
 
+/// The level number (1-based) just completed, set on the Level Complete
+/// screen and consumed once by the map to animate the advance to the next
+/// stage. Null when there's nothing to animate.
+class QuestJustCompleted extends Notifier<int?> {
+  @override
+  int? build() => null;
+  void set(int? value) => state = value;
+}
+
+final questJustCompletedProvider = NotifierProvider<QuestJustCompleted, int?>(
+  QuestJustCompleted.new,
+);
+
 final questServiceProvider = Provider<QuestService>(
   (ref) => QuestService(
     prefs: ref.watch(sharedPreferencesProvider),

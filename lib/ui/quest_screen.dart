@@ -33,9 +33,22 @@ class _QuestScreenState extends ConsumerState<QuestScreen> {
   String? _bannerText;
   bool _bannerVisible = false;
 
+  // Centered goal banner shown at stage start.
+  bool _goalVisible = false;
+
+  void _showGoalBanner() {
+    setState(() => _goalVisible = true);
+    Timer(const Duration(milliseconds: 2000), () {
+      if (mounted) setState(() => _goalVisible = false);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _showGoalBanner();
+    });
     final controller = ref.read(questGameProvider.notifier);
     _game = BlockPuzzleGame(
       theme: ref.read(themeProvider),
@@ -82,12 +95,13 @@ class _QuestScreenState extends ConsumerState<QuestScreen> {
       } else {
         ref.read(audioProvider).runEnded();
       }
+      final praise = _game.lastPraise;
       // Let the final clear's effects play out first.
       Future.delayed(const Duration(milliseconds: 900), () {
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const QuestResultScreen()),
+          MaterialPageRoute(builder: (_) => QuestResultScreen(praise: praise)),
         );
       });
     }
@@ -141,7 +155,15 @@ class _QuestScreenState extends ConsumerState<QuestScreen> {
                           ),
                         ),
                         IconButton(
-                          onPressed: () => showSettingsSheet(context),
+                          onPressed: () => showSettingsSheet(
+                            context,
+                            onRestart: () {
+                              _resultShown = false;
+                              _shownBanners.clear();
+                              ref.read(questGameProvider.notifier).retry();
+                              _showGoalBanner();
+                            },
+                          ),
                           icon: const Icon(Icons.settings),
                           color: Colors.white70,
                         ),
@@ -181,6 +203,57 @@ class _QuestScreenState extends ConsumerState<QuestScreen> {
                             fontWeight: FontWeight.w900,
                             color: Color(0xFFFFD54F),
                           ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // Stage goal, centered, at the start of the stage.
+              Center(
+                child: IgnorePointer(
+                  child: AnimatedScale(
+                    scale: _goalVisible ? 1 : 0.6,
+                    duration: const Duration(milliseconds: 350),
+                    curve: Curves.easeOutBack,
+                    child: AnimatedOpacity(
+                      opacity: _goalVisible ? 1 : 0,
+                      duration: const Duration(milliseconds: 300),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 18,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xE6202C54),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: const Color(0xFFF2C94C),
+                            width: 2,
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              'GOAL',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFFF2C94C),
+                                letterSpacing: 3,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              goalDescription(run.stage.goal),
+                              style: const TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),

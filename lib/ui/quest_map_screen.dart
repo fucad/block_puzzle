@@ -18,7 +18,8 @@ class QuestMapScreen extends ConsumerStatefulWidget {
   ConsumerState<QuestMapScreen> createState() => _QuestMapScreenState();
 }
 
-class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
+class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
+    with SingleTickerProviderStateMixin {
   final _scroll = ScrollController();
   bool _jumped = false;
 
@@ -28,10 +29,33 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
   static const _bottomPad = 28.0;
   static const _colFractions = [0.15, 0.38, 0.62, 0.85];
 
+  // Advance-to-next-stage animation: the trail fills from the just-cleared
+  // node to the new current one, which then lights up.
+  AnimationController? _advance;
+  int? _animatedFrom; // level number being animated (guards re-trigger)
+  double _animLit = 0;
+
   @override
   void dispose() {
+    _advance?.dispose();
     _scroll.dispose();
     super.dispose();
+  }
+
+  /// Kicks off the fill animation from [fromIndex] to [toIndex] once.
+  void _startAdvance(int fromIndex, int toIndex) {
+    _advance?.dispose();
+    _advance =
+        AnimationController(
+            vsync: this,
+            duration: const Duration(milliseconds: 1100),
+          )
+          ..addListener(() {
+            setState(() {
+              _animLit = fromIndex + (toIndex - fromIndex) * _advance!.value;
+            });
+          })
+          ..forward();
   }
 
   Offset _nodeCenter(int index, double width, double totalHeight) {
@@ -149,6 +173,31 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
                           );
                         }
 
+                        // Start the advance animation once when arriving
+                        // from a just-completed stage.
+                        final justDone = ref.watch(questJustCompletedProvider);
+                        if (justDone != null && _animatedFrom != justDone) {
+                          _animatedFrom = justDone;
+                          final fromIndex = justDone - 1; // 0-based
+                          final toIndex = currentIndex >= 0
+                              ? currentIndex
+                              : levels.length; // all done → into the chest
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (!mounted) return;
+                            _startAdvance(fromIndex, toIndex);
+                            ref
+                                .read(questJustCompletedProvider.notifier)
+                                .set(null);
+                          });
+                        }
+
+                        final animating = _advance?.isAnimating ?? false;
+                        final litUpTo = animating
+                            ? _animLit
+                            : (allDone
+                                  ? centers.length.toDouble()
+                                  : currentIndex.toDouble());
+
                         return SingleChildScrollView(
                           controller: _scroll,
                           reverse: true,
@@ -162,9 +211,7 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
                                   size: Size(width, totalHeight),
                                   painter: _TrailPainter(
                                     points: [...centers, chestCenter],
-                                    litUpTo: allDone
-                                        ? centers.length
-                                        : currentIndex,
+                                    litUpTo: litUpTo,
                                   ),
                                 ),
                                 for (final (i, node) in levels.indexed)
@@ -173,7 +220,12 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen> {
                                     top: centers[i].dy - 27,
                                     child: _NodeTile(
                                       node: node,
-                                      isCurrent: i == currentIndex,
+                                      // During the advance, the new current
+                                      // node only lights up once the trail
+                                      // fill reaches it.
+                                      isCurrent:
+                                          i == currentIndex &&
+                                          (!animating || _animLit >= i - 0.12),
                                       onTap: i == currentIndex
                                           ? () => _play(context, node)
                                           : null,
@@ -288,8 +340,9 @@ class _TrailPainter extends CustomPainter {
 
   final List<Offset> points;
 
-  /// Number of leading points already reached (lit segment count).
-  final int litUpTo;
+  /// Leading points already reached (lit segment count). Fractional while
+  /// the advance-to-next-stage animation is running.
+  final double litUpTo;
 
   @override
   void paint(Canvas canvas, Size size) {

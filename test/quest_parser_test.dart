@@ -245,4 +245,14 @@ void main() {
       );
     });
   });
+
+  group('goalDescription', () {
+    test('describes score and gem goals', () {
+      expect(goalDescription(const ScoreGoal(700)), contains('700'));
+      expect(
+        goalDescription(const GemsGoal({GemColor.red: 2})),
+        contains('gems'),
+      );
+    });
+  });
 }

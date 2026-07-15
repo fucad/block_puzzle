@@ -36,10 +36,15 @@ class PlacementEvents {
 }
 
 class PlacementOutcome {
-  const PlacementOutcome(this.state, this.events);
+  const PlacementOutcome(this.state, this.events, {required this.stampedBoard});
 
   final GameState state;
   final PlacementEvents events;
+
+  /// The board right after the piece was stamped but BEFORE lines were
+  /// cleared — lets effects read the colors/gems of the cells about to
+  /// vanish (falling-block and gem-collect animations).
+  final Board stampedBoard;
 }
 
 /// Pure, deterministic rules engine: `place(state, ...)` is the only way a
@@ -152,6 +157,7 @@ class GameEngine {
         gems: clear.gems,
         trayRefilled: trayRefilled,
       ),
+      stampedBoard: stamped,
     );
   }
 

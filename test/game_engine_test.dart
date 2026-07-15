@@ -146,6 +146,11 @@ void main() {
     expect(outcome.events.allClear, isTrue);
     expect(outcome.state.board.isEmpty, isTrue);
     expect(outcome.events.scoreDelta, 1 + 10 + allClearBonus);
+    // stampedBoard is the board BEFORE clearing (for fall/gem effects):
+    // the row is full there even though the final board is empty.
+    for (var c = 0; c < 8; c++) {
+      expect(outcome.stampedBoard.isOccupied(0, c), isTrue);
+    }
   });
 
   test('tray refills after the third placement', () {
