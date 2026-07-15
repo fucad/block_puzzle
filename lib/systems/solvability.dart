@@ -14,9 +14,7 @@ bool canClearLineWith(Board board, Piece piece) {
   for (var row = 0; row <= Board.size - piece.height; row++) {
     for (var col = 0; col <= Board.size - piece.width; col++) {
       if (!canPlace(board, piece, row, col)) continue;
-      if (clearFullLines(stamp(board, piece, row, col)).lineCount > 0) {
-        return true;
-      }
+      if (placementCompletesLine(board, piece, row, col)) return true;
     }
   }
   return false;
@@ -54,8 +52,7 @@ class FitProfile {
       for (var col = 0; col <= Board.size - piece.width; col++) {
         if (!canPlace(board, piece, row, col)) continue;
         fits = true;
-        if (!canBreak &&
-            clearFullLines(stamp(board, piece, row, col)).lineCount > 0) {
+        if (!canBreak && placementCompletesLine(board, piece, row, col)) {
           canBreak = true;
         }
         var contact = 0;

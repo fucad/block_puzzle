@@ -172,6 +172,25 @@ lose-screen/80%-banner visual eyeballing during play, a CI workflow
 - Session ended mid slice-D device verification at user request; all
   code committed on `dev`, working tree clean, 43/43 tests green.
 
+### 2026-07-15 — Perf: thermal throttling after 5–10 min of play
+- User report: sound/vibration/animation all degrade and the phone gets
+  hot after 5–10 min. Diagnosed with a monitored on-device soak: a
+  bounce-only drag soak (60fps render + haptics, NO audio/blur) plateaued
+  safely at ~46.6°C with 0% jank and flat memory, and logcat's "Skipped N
+  frames" were the idle-pause engaging — so baseline Flame/render, memory,
+  and idle-pause are all fine. NOT Flame or the build; the culprits were
+  specific expensive ops the bounce test didn't hit:
+  1. **Audio** — `play(AssetSource())` re-decoded each SFX into Android's
+     SoundPool every hit, degrading after a few hundred plays ("sound
+     lags"). Now: one player per sound, asset preloaded once, replayed via
+     seek+resume.
+  2. **Per-frame MaskFilter.blur** — the combo glow frame and every gem's
+     shadow blurred every frame (blur is the priciest mobile-GPU op).
+     Replaced with cheap concentric strokes / a solid offset shadow.
+  3. Idle-pause threshold 1.0s → 0.35s (pause sooner between moves).
+  4. Tray-gen `canBreak` check made allocation-free
+     (placementCompletesLine) to cut per-refill GC churn.
+
 ### 2026-07-15 — Playtest round 3: haptics, catch area, snug dealing
 - Haptics not felt on Android: root cause was the missing VIBRATE
   permission (so HapticFeedback.vibrate no-op'd) plus Flutter's impact

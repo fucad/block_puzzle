@@ -79,7 +79,9 @@ class BlockPuzzleGame extends FlameGame {
   // thinks: sustained GPU load slowly heats phones into thermal
   // throttling (reported as "gets slow after a while"). When nothing is
   // animating, the engine pauses; any interaction resumes it.
-  static const _idleAfterSeconds = 1.0;
+  // Short: a puzzle spends most of its time static between moves, so
+  // pause quickly. Gestures and state changes resume instantly.
+  static const _idleAfterSeconds = 0.35;
   double _idleTime = 0;
 
   /// Set by the tray piece while a drag is in flight.

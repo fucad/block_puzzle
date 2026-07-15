@@ -27,6 +27,7 @@ final themeProvider = Provider<GameTheme>(
 final audioProvider = Provider<AudioService>((ref) {
   final service = AudioService()
     ..enabled = ref.read(saveDataProvider).settings.soundOn;
+  service.init(); // preload all sounds; safe to fire and forget
   ref.listen(
     saveDataProvider,
     (_, next) => service.enabled = next.settings.soundOn,
