@@ -4,6 +4,7 @@ import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/foundation.dart';
 
+import '../models/board.dart';
 import '../models/game_state.dart';
 import '../models/game_theme.dart';
 import '../models/piece.dart';
@@ -174,37 +175,76 @@ class BlockPuzzleGame extends FlameGame {
     _renderedTray = List.of(state.tray);
   }
 
-  /// Updates [preview] for a piece hovering with its top-left cell corner
-  /// at [pieceTopLeft] (canvas coords). Null when off-board/illegal cells
-  /// still produce a preview with legal=false so the ghost can hide.
+  /// Updates [preview] while a piece hovers with its top-left cell corner
+  /// at [pieceTopLeft]. Behaviour (per playtest feedback):
+  /// - off the board → no preview (the drop will bounce back to the tray),
+  /// - over the board → always show a ghost. Snap to the nearest legal
+  ///   spot so there is always a pre-place, and the drop lands there —
+  ///   you don't have to hit the exact cell.
+  /// - over the board but the piece fits nowhere → an invalid (red) ghost
+  ///   at the clamped position; the drop bounces.
   void updatePreview(Piece piece, Offset pieceTopLeft) {
-    final (row, col) = geometry.snapCell(pieceTopLeft);
-    final legal = canPlace(state.board, piece, row, col);
-    var rows = const <int>[];
-    var cols = const <int>[];
-    if (legal) {
-      final result = clearFullLines(stamp(state.board, piece, row, col));
-      rows = result.rows;
-      cols = result.cols;
+    final cell = geometry.cell;
+    final center =
+        pieceTopLeft + Offset(piece.width * cell / 2, piece.height * cell / 2);
+    if (!geometry.boardRect.inflate(cell * 0.6).contains(center)) {
+      preview = null; // off the grid
+      return;
     }
+    final (rawRow, rawCol) = geometry.snapCell(pieceTopLeft);
+    final resolved = _nearestLegal(piece, rawRow, rawCol);
+    if (resolved == null) {
+      preview = DragPreview(
+        piece: piece,
+        row: rawRow.clamp(0, Board.size - piece.height),
+        col: rawCol.clamp(0, Board.size - piece.width),
+        legal: false,
+        wouldClearRows: const [],
+        wouldClearCols: const [],
+      );
+      return;
+    }
+    final (row, col) = resolved;
+    final result = clearFullLines(stamp(state.board, piece, row, col));
     preview = DragPreview(
       piece: piece,
       row: row,
       col: col,
-      legal: legal,
-      wouldClearRows: rows,
-      wouldClearCols: cols,
+      legal: true,
+      wouldClearRows: result.rows,
+      wouldClearCols: result.cols,
     );
+  }
+
+  /// Closest legal placement to the raw snap (Euclidean in cell space),
+  /// or null if the piece fits nowhere.
+  (int, int)? _nearestLegal(Piece piece, int rawRow, int rawCol) {
+    final maxRow = Board.size - piece.height;
+    final maxCol = Board.size - piece.width;
+    if (maxRow < 0 || maxCol < 0) return null;
+    (int, int)? best;
+    var bestDist = 1 << 30;
+    for (var r = 0; r <= maxRow; r++) {
+      for (var c = 0; c <= maxCol; c++) {
+        if (!canPlace(state.board, piece, r, c)) continue;
+        final d = (r - rawRow) * (r - rawRow) + (c - rawCol) * (c - rawCol);
+        if (d < bestDist) {
+          bestDist = d;
+          best = (r, c);
+        }
+      }
+    }
+    return best;
   }
 
   void clearPreview() => preview = null;
 
-  /// Attempts the drop; returns the outcome (null = bounce back to tray).
-  PlacementOutcome? tryPlace(int trayIndex, Offset pieceTopLeft) {
-    final piece = pieceById[state.tray[trayIndex]!]!;
-    final (row, col) = geometry.snapCell(pieceTopLeft);
-    if (!canPlace(state.board, piece, row, col)) return null;
-    final outcome = onPlace(trayIndex, row, col);
+  /// Drops [trayIndex] at the resolved preview cell. Returns null (bounce
+  /// to tray) when there is no legal preview — i.e. off-grid or no fit.
+  PlacementOutcome? tryPlace(int trayIndex) {
+    final p = preview;
+    if (p == null || !p.legal) return null;
+    final outcome = onPlace(trayIndex, p.row, p.col);
     if (outcome != null) spawnPlacementEffects(this, outcome.events);
     return outcome;
   }

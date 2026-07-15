@@ -98,8 +98,11 @@ class BoardComponent extends PositionComponent
             Paint()..color = theme.emptyCell,
           );
         } else if (occupant.gem != null) {
-          paintBlock(canvas, rect, gemBlockGold);
+          paintBlock(canvas, rect, puzzleBlockLight);
           _paintGem(canvas, rect, gemColors[occupant.gem]!);
+        } else if (occupant.preplaced) {
+          // Pre-placed puzzle blocks share the neutral light tile.
+          paintBlock(canvas, rect, puzzleBlockLight);
         } else {
           paintBlock(canvas, rect, theme.blockColor(occupant.colorId));
         }
@@ -107,7 +110,27 @@ class BoardComponent extends PositionComponent
     }
 
     final preview = game.preview;
-    if (preview == null || !preview.legal) return;
+    if (preview == null) return;
+
+    // Over the board but the piece fits nowhere near: a red invalid ghost
+    // so there is still a pre-place (the drop will bounce).
+    if (!preview.legal) {
+      for (final (r, c) in preview.piece.cells) {
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromLTWH(
+              (preview.col + c) * cell,
+              (preview.row + r) * cell,
+              cell,
+              cell,
+            ).deflate(cell * 0.06),
+            Radius.circular(cell * 0.12),
+          ),
+          Paint()..color = const Color(0x55E53935),
+        );
+      }
+      return;
+    }
 
     // Would-clear lines glow across their full length.
     final glow = Paint()..color = theme.lineHighlight;

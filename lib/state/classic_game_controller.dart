@@ -53,7 +53,8 @@ class ClassicGameController extends Notifier<GameState?> {
             ? _pinnedSeed
             : DateTime.now().microsecondsSinceEpoch);
     _seed = s;
-    final fresh = GameEngine.newGame(s);
+    // Classic leans into clears/combos (quest keeps its designed balance).
+    final fresh = GameEngine.newGame(s, clearFocus: true);
     state = fresh;
     ref.read(saveDataProvider.notifier).storeClassicRun(fresh, s);
   }
