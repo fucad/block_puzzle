@@ -1,12 +1,10 @@
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../game/block_puzzle_game.dart';
 import '../models/game_state.dart';
 import '../state/classic_game_controller.dart';
-import '../systems/game_engine.dart';
 import '../state/providers.dart';
 import 'run_summary_screen.dart';
 import 'settings_sheet.dart';
@@ -34,32 +32,16 @@ class _ClassicScreenState extends ConsumerState<ClassicScreen> {
     _game = BlockPuzzleGame(
       theme: ref.read(themeProvider),
       initialState: ref.read(classicGameProvider)!,
-      onPickup: () {
-        if (ref.read(saveDataProvider).settings.hapticsOn) {
-          HapticFeedback.selectionClick();
-        }
-      },
+      onPickup: () => ref.read(hapticProvider).pickup(),
       onPlace: (trayIndex, row, col) {
         final outcome = controller.place(trayIndex, row, col);
         if (outcome != null) {
           ref.read(audioProvider).placement(outcome.events);
-          _placementHaptic(outcome.events);
+          ref.read(hapticProvider).placement(outcome.events);
         }
         return outcome;
       },
     );
-  }
-
-  /// Haptics scaled to the moment; strong enough to actually be felt.
-  void _placementHaptic(PlacementEvents events) {
-    if (!ref.read(saveDataProvider).settings.hapticsOn) return;
-    if (events.allClear) {
-      HapticFeedback.vibrate();
-    } else if (events.linesCleared > 0) {
-      HapticFeedback.heavyImpact();
-    } else {
-      HapticFeedback.mediumImpact();
-    }
   }
 
   void _onStateChanged(GameState? next) {

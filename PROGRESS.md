@@ -172,6 +172,23 @@ lose-screen/80%-banner visual eyeballing during play, a CI workflow
 - Session ended mid slice-D device verification at user request; all
   code committed on `dev`, working tree clean, 43/43 tests green.
 
+### 2026-07-15 — Playtest round 3: haptics, catch area, snug dealing
+- Haptics not felt on Android: root cause was the missing VIBRATE
+  permission (so HapticFeedback.vibrate no-op'd) plus Flutter's impact
+  haptics being too weak on Samsung. Added VIBRATE + the `vibration`
+  package; new HapticService drives explicit duration/amplitude pulses
+  (with graceful fallback to HapticFeedback where no amplitude control),
+  scaled per event: pickup / place / clear / combo / all-clear pattern.
+  Centralized out of both screens into a provider mirroring hapticsOn.
+- Tray catch area: pieces are now grabbable anywhere in their tray slot
+  zone (bounded to just under half the slot spacing so neighbours don't
+  fight over a touch), not just on the blocks.
+- Generator snug-fit: added FitProfile.bestContact (how flush a piece
+  sits against filled cells/border) in one combined placement scan;
+  weight now × (1 + bestContact·snugBoost=3) and breakerBoost raised to
+  4. Pieces slot into gaps far more, per feedback that fitting matters
+  even more than breaking.
+
 ### 2026-07-15 — Opening cascade (all three opening pieces break)
 - Playtest: the opening break was too weak — only one of the three tray
   pieces cleared. Strengthened the contract from "≥1 piece breaks" to a

@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../game/block_puzzle_game.dart';
@@ -11,7 +10,6 @@ import '../models/game_theme.dart' as gt;
 import '../models/quest.dart';
 import '../state/providers.dart';
 import '../state/quest_game_controller.dart';
-import '../systems/game_engine.dart';
 import 'quest_result_screen.dart';
 import 'settings_sheet.dart';
 
@@ -42,31 +40,16 @@ class _QuestScreenState extends ConsumerState<QuestScreen> {
     _game = BlockPuzzleGame(
       theme: ref.read(themeProvider),
       initialState: ref.read(questGameProvider)!.game,
-      onPickup: () {
-        if (ref.read(saveDataProvider).settings.hapticsOn) {
-          HapticFeedback.selectionClick();
-        }
-      },
+      onPickup: () => ref.read(hapticProvider).pickup(),
       onPlace: (trayIndex, row, col) {
         final outcome = controller.place(trayIndex, row, col);
         if (outcome != null) {
           ref.read(audioProvider).placement(outcome.events);
-          _placementHaptic(outcome.events);
+          ref.read(hapticProvider).placement(outcome.events);
         }
         return outcome;
       },
     );
-  }
-
-  void _placementHaptic(PlacementEvents events) {
-    if (!ref.read(saveDataProvider).settings.hapticsOn) return;
-    if (events.allClear) {
-      HapticFeedback.vibrate();
-    } else if (events.linesCleared > 0) {
-      HapticFeedback.heavyImpact();
-    } else {
-      HapticFeedback.mediumImpact();
-    }
   }
 
   void _onRunChanged(QuestRun? run) {
@@ -93,9 +76,12 @@ class _QuestScreenState extends ConsumerState<QuestScreen> {
 
     if (run.status != QuestStatus.playing && !_resultShown) {
       _resultShown = true;
-      run.status == QuestStatus.won
-          ? ref.read(audioProvider).stageWon()
-          : ref.read(audioProvider).runEnded();
+      if (run.status == QuestStatus.won) {
+        ref.read(audioProvider).stageWon();
+        ref.read(hapticProvider).stageWon();
+      } else {
+        ref.read(audioProvider).runEnded();
+      }
       // Let the final clear's effects play out first.
       Future.delayed(const Duration(milliseconds: 900), () {
         if (!mounted) return;
