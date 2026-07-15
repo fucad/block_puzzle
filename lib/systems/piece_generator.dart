@@ -1,4 +1,5 @@
 import '../models/board.dart';
+import '../models/cell.dart';
 import '../models/piece.dart';
 import '../models/piece_catalog.dart';
 import 'game_constants.dart';
@@ -110,6 +111,45 @@ class PieceGenerator {
       solvableFallback ??= tray;
     }
     return solvableFallback ?? best;
+  }
+
+  /// Assigns gems to a freshly-drawn [tray] for a quest gem stage. Only
+  /// colors still [needed] (need > 0) are spawned, weighted by how many are
+  /// left. Each piece has a chance of carrying one gem (bigger pieces may
+  /// carry two); many pieces carry none. Consumes [rng] deterministically,
+  /// so it must run right after [nextTray] using the same generator.
+  List<Map<int, GemColor>> assignGems(
+    List<Piece> tray,
+    Map<GemColor, int> needed,
+  ) {
+    final colors = [
+      for (final e in needed.entries)
+        if (e.value > 0) e,
+    ];
+    if (colors.isEmpty) {
+      return List.generate(tray.length, (_) => const <int, GemColor>{});
+    }
+    var total = colors.fold(0, (a, e) => a + e.value);
+    GemColor pick() {
+      var roll = rng.nextInt(total);
+      for (final e in colors) {
+        roll -= e.value;
+        if (roll < 0) return e.key;
+      }
+      return colors.last.key;
+    }
+
+    return [
+      for (final piece in tray)
+        if (rng.nextDouble() < gemSpawnChance)
+          {
+            rng.nextInt(piece.cells.length): pick(),
+            if (piece.cells.length >= 4 && rng.nextDouble() < gemSecondChance)
+              rng.nextInt(piece.cells.length): pick(),
+          }
+        else
+          const <int, GemColor>{},
+    ];
   }
 
   Piece _weightedDraw(List<Piece> pieces, double Function(Piece) weightOf) {

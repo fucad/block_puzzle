@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:block_puzzle/models/cell.dart';
 import 'package:block_puzzle/models/game_state.dart';
 import 'package:block_puzzle/models/save_data.dart';
 import 'package:block_puzzle/systems/game_engine.dart';
@@ -76,6 +77,27 @@ void main() {
     expect(json['rngState'], isA<String>());
     final restored = GameState.fromJson(json.cast<String, Object?>());
     expect(restored.rngState, -8423581294942912);
+  });
+
+  test('tray gems and gem goal round-trip through JSON', () {
+    final state = GameEngine.newGame(1).copyWith(
+      tray: ['single', 'line2h', null],
+      trayGems: [
+        {0: GemColor.red},
+        {1: GemColor.blue},
+        const {},
+      ],
+      gemGoal: {GemColor.red: 5, GemColor.blue: 3},
+    );
+    final restored = GameState.fromJson(
+      (jsonDecode(jsonEncode(state.toJson())) as Map).cast<String, Object?>(),
+    );
+    expect(restored.trayGems, [
+      {0: GemColor.red},
+      {1: GemColor.blue},
+      const <int, GemColor>{},
+    ]);
+    expect(restored.gemGoal, {GemColor.red: 5, GemColor.blue: 3});
   });
 
   test('unknown save version throws instead of silently loading', () {

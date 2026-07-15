@@ -214,4 +214,84 @@ void main() {
     final withSingle = bigOnly.copyWith(tray: ['square3', 'single', null]);
     expect(GameEngine.isGameOver(withSingle), isFalse);
   });
+
+  group('tray gems', () {
+    test('placing a gem-carrying piece into a clearing line collects it', () {
+      final state = GameEngine.newGame(1, gemGoal: {GemColor.red: 5}).copyWith(
+        board: boardFrom([
+          '........',
+          '........',
+          '........',
+          '........',
+          '........',
+          '........',
+          '........',
+          '1111111.', // row 7 needs (7,7)
+        ]),
+        tray: ['single', 'single', 'single'],
+        trayGems: [
+          {0: GemColor.red}, // this single carries a red gem
+          const {},
+          const {},
+        ],
+        gemGoal: {GemColor.red: 5},
+      );
+      final outcome = GameEngine.place(state, 0, 7, 7)!;
+      expect(outcome.events.clearedRows, [7]);
+      expect(outcome.events.gems, {GemColor.red: 1});
+      expect(outcome.state.gemsCollected, {GemColor.red: 1});
+    });
+
+    test('refill spawns only colors still needed', () {
+      // red already met (goal 3, collected 3); only blue remains.
+      var state = GameEngine.newGame(
+        7,
+        gemGoal: {GemColor.red: 3, GemColor.blue: 3},
+      );
+      state = state.copyWith(
+        gemsCollected: {GemColor.red: 3},
+        // Force a one-piece tray so the next place refills.
+        tray: ['single', null, null],
+        trayGems: [const {}, const {}, const {}],
+        board: boardFrom([
+          '........',
+          '........',
+          '........',
+          '........',
+          '........',
+          '........',
+          '........',
+          '1111111.',
+        ]),
+      );
+      final refilled = GameEngine.place(state, 0, 7, 7)!.state;
+      final spawned = refilled.trayGems.expand((m) => m.values).toSet();
+      expect(spawned, isNot(contains(GemColor.red)));
+    });
+
+    test('collected gems may exceed the goal', () {
+      final state = GameEngine.newGame(1, gemGoal: {GemColor.red: 1}).copyWith(
+        board: boardFrom([
+          '........',
+          '........',
+          '........',
+          '........',
+          '........',
+          '........',
+          '........',
+          '11111...',
+        ]),
+        // A 3-wide line piece carrying 3 red gems completes the row.
+        tray: ['line3h', null, null],
+        trayGems: [
+          {0: GemColor.red, 1: GemColor.red, 2: GemColor.red},
+          const {},
+          const {},
+        ],
+        gemGoal: {GemColor.red: 1},
+      );
+      final outcome = GameEngine.place(state, 0, 7, 5)!;
+      expect(outcome.state.gemsCollected[GemColor.red], greaterThan(1));
+    });
+  });
 }

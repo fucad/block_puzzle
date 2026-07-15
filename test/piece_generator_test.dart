@@ -1,4 +1,6 @@
 import 'package:block_puzzle/models/board.dart';
+import 'package:block_puzzle/models/cell.dart';
+import 'package:block_puzzle/models/piece_catalog.dart';
 import 'package:block_puzzle/systems/game_constants.dart';
 import 'package:block_puzzle/systems/piece_generator.dart';
 import 'package:block_puzzle/systems/placement.dart';
@@ -151,6 +153,35 @@ void main() {
     final a = PieceGenerator(GameRng(9)).nextTray(board, clearFocus: true);
     final b = PieceGenerator(GameRng(9)).nextTray(board, clearFocus: true);
     expect(a.map((p) => p.id).toList(), b.map((p) => p.id).toList());
+  });
+
+  test('assignGems spawns only needed colors, deterministically', () {
+    final tray = [
+      pieceById['line3h']!,
+      pieceById['square2']!,
+      pieceById['single']!,
+    ];
+    final a = PieceGenerator(GameRng(3)).assignGems(tray, {
+      GemColor.red: 5,
+      GemColor.blue: 0, // met -> must not spawn
+    });
+    final b = PieceGenerator(
+      GameRng(3),
+    ).assignGems(tray, {GemColor.red: 5, GemColor.blue: 0});
+    expect(a, b, reason: 'deterministic per seed');
+    final colors = a.expand((m) => m.values).toSet();
+    expect(colors, isNot(contains(GemColor.blue)));
+    expect(colors, contains(GemColor.red));
+  });
+
+  test('assignGems with nothing needed spawns no gems', () {
+    final tray = [
+      pieceById['line5h']!,
+      pieceById['single']!,
+      pieceById['tUp']!,
+    ];
+    final result = PieceGenerator(GameRng(1)).assignGems(tray, const {});
+    expect(result.every((m) => m.isEmpty), isTrue);
   });
 
   test('fresh trays are always placeable while any piece fits', () {

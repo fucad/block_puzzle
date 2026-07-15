@@ -172,6 +172,22 @@ lose-screen/80%-banner visual eyeballing during play, a CI workflow
 - Session ended mid slice-D device verification at user request; all
   code committed on `dev`, working tree clean, 43/43 tests green.
 
+### 2026-07-16 — Gems ride on tray pieces (quest gem stages reworked)
+- User: pre-placing all gems on the grid made stages swingy and capped
+  goals low. Now gems spawn on generated tray pieces (assignGems, ~50%
+  of pieces carry one, big pieces sometimes two), drawing only colors
+  still needed; a met color stops spawning; over-collecting is fine.
+  A placed gem is collected when a line through it clears.
+- Model: GameState gains trayGems (per-slot cell→color) + gemGoal;
+  placement.stampWithGems; engine threads gems on place/refill; the
+  controller passes the goal; board renders placed gems in the piece
+  color (pre-placed stay light); tray pieces show their gems.
+- Validator: dropped the "board must contain the goal's gems" rule
+  (obsolete); added a gem-count sanity range. All 20 gem stages had
+  their board gems stripped and goals raised (single 8 / two 6 / three 5).
+- Workflow: per user, land on dev only from here — no auto-promote to
+  main (they promote later). See memory no-auto-promote-to-main.
+
 ### 2026-07-16 — Playtest round 5: 7 polish items
 - Ghost dial-back: nearest-legal snap capped to a 1-cell radius (catches
   grid-line straddling, no longer teleports onto far gaps; over occupied
