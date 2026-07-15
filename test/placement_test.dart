@@ -1,5 +1,6 @@
 import 'package:block_puzzle/models/board.dart';
 import 'package:block_puzzle/models/piece_catalog.dart';
+import 'package:block_puzzle/systems/line_clear.dart';
 import 'package:block_puzzle/systems/placement.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -55,6 +56,50 @@ void main() {
       '........',
       '........',
     ]);
+  });
+
+  group('placementCompletesLine', () {
+    test('true when the placement fills a row or column', () {
+      final board = boardFrom([
+        '1111111.', // row 0 needs (0,7)
+        '........',
+        '........',
+        '........',
+        '........',
+        '........',
+        '........',
+        '........',
+      ]);
+      expect(placementCompletesLine(board, single, 0, 7), isTrue);
+      expect(placementCompletesLine(board, single, 3, 3), isFalse);
+    });
+
+    test('agrees with the stamp+clear result across positions', () {
+      final board = boardFrom([
+        '11111.1.',
+        '1.1.....',
+        '1.......',
+        '1...22..',
+        '1...22..',
+        '........',
+        '33.3.3..',
+        '333.333.',
+      ]);
+      for (final piece in [line3h, single, square3]) {
+        for (var r = 0; r <= 8 - piece.height; r++) {
+          for (var c = 0; c <= 8 - piece.width; c++) {
+            if (!canPlace(board, piece, r, c)) continue;
+            final viaStamp =
+                clearFullLines(stamp(board, piece, r, c)).lineCount > 0;
+            expect(
+              placementCompletesLine(board, piece, r, c),
+              viaStamp,
+              reason: '${piece.id} at ($r,$c)',
+            );
+          }
+        }
+      }
+    });
   });
 
   group('fitsAnywhere', () {

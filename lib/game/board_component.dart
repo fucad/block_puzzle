@@ -46,24 +46,34 @@ class BoardComponent extends PositionComponent
     }
 
     // Combo streak glow around the frame: gold when warm, hue-cycling
-    // rainbow when hot (reference UX).
+    // rainbow when hot (reference UX). Drawn as a few concentric
+    // translucent strokes rather than a MaskFilter.blur — a per-frame
+    // blur is one of the most expensive mobile-GPU ops and, sustained
+    // during a hot streak, was a real thermal-throttling contributor.
     final combo = game.state.combo;
     if (combo >= comboGlowMin) {
       final rainbow = combo >= comboRainbowMin;
-      final glowColor = rainbow
+      final baseColor = rainbow
           ? HSVColor.fromAHSV(1, (_time * 160) % 360, 0.7, 1).toColor()
-          : Color(0xFFF2C94C).withValues(alpha: 0.7 + 0.3 * sin(_time * 5));
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(-8, -8, size.x + 16, size.y + 16),
-          const Radius.circular(14),
-        ),
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 10
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10)
-          ..color = glowColor,
-      );
+          : const Color(0xFFF2C94C);
+      final pulse = 0.7 + 0.3 * sin(_time * 5);
+      for (var i = 0; i < 3; i++) {
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromLTWH(
+              -6.0 - i * 5,
+              -6.0 - i * 5,
+              size.x + 12 + i * 10,
+              size.y + 12 + i * 10,
+            ),
+            Radius.circular(14 + i * 3),
+          ),
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 6 - i * 1.5
+            ..color = baseColor.withValues(alpha: pulse * (0.5 - i * 0.15)),
+        );
+      }
     }
 
     final boardPaint = Paint()..color = theme.boardBackground;
@@ -141,12 +151,13 @@ class BoardComponent extends PositionComponent
           : path.lineTo(point.dx, point.dy);
     }
     path.close();
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = const Color(0x55000000)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
-    );
+    // Cheap solid drop shadow (offset, no blur) instead of a per-frame
+    // MaskFilter.blur per gem — boards can hold many gems and this ran
+    // every frame.
+    canvas.save();
+    canvas.translate(outer * 0.12, outer * 0.14);
+    canvas.drawPath(path, Paint()..color = const Color(0x40000000));
+    canvas.restore();
     canvas.drawPath(path, Paint()..color = color);
     canvas.drawCircle(
       center.translate(-outer * 0.25, -outer * 0.25),

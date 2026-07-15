@@ -36,3 +36,42 @@ bool fitsAnywhere(Board board, Piece piece) {
   }
   return false;
 }
+
+/// True if placing [piece] at ([row], [col]) would complete ≥1 row or
+/// column — without allocating a stamped board (the hot path in tray
+/// generation runs this across every piece × position each refill).
+/// Caller ensures the placement is legal.
+bool placementCompletesLine(Board board, Piece piece, int row, int col) {
+  bool isFilled(int r, int c) {
+    if (board.isOccupied(r, c)) return true;
+    for (final (pr, pc) in piece.cells) {
+      if (row + pr == r && col + pc == c) return true;
+    }
+    return false;
+  }
+
+  // Only rows/cols the piece touches can newly complete.
+  for (final (pr, _) in piece.cells) {
+    final r = row + pr;
+    var full = true;
+    for (var c = 0; c < Board.size; c++) {
+      if (!isFilled(r, c)) {
+        full = false;
+        break;
+      }
+    }
+    if (full) return true;
+  }
+  for (final (_, pc) in piece.cells) {
+    final c = col + pc;
+    var full = true;
+    for (var r = 0; r < Board.size; r++) {
+      if (!isFilled(r, c)) {
+        full = false;
+        break;
+      }
+    }
+    if (full) return true;
+  }
+  return false;
+}
