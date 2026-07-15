@@ -186,18 +186,63 @@ void main() {
       );
     });
 
-    test('validator demands a possible opening break', () {
-      final pack = QuestPack.fromJson({
-        'schema': 1,
-        'id': 'p',
-        'title': 'P',
-        'stages': [
-          // Empty board: nothing can clear a line on move one.
-          stageJson(board: List.filled(8, '........'))
-            ..['tray'] = ['single', 'line2h', 'square2'],
-        ],
-      });
-      expect(validatePack(pack).single, contains('opening break'));
+    test('validator demands a full opening cascade', () {
+      QuestPack packWith(List<String> board, List<String> tray) =>
+          QuestPack.fromJson({
+            'schema': 1,
+            'id': 'p',
+            'title': 'P',
+            'stages': [stageJson(board: board)..['tray'] = tray],
+          });
+
+      // Empty board: nothing can break on move one.
+      expect(
+        validatePack(
+          packWith(List.filled(8, '........'), ['single', 'line2h', 'square2']),
+        ).single,
+        contains('opening cascade'),
+      );
+
+      // Only ONE break available: two pieces would place without
+      // clearing — the strengthened contract rejects this too.
+      expect(
+        validatePack(
+          packWith(
+            [
+              '........',
+              '........',
+              '........',
+              '........',
+              '........',
+              '........',
+              '........',
+              '1111111.',
+            ],
+            ['single', 'line2h', 'square2'],
+          ),
+        ).single,
+        contains('opening cascade'),
+      );
+
+      // Three designed gaps: every piece breaks — valid.
+      expect(
+        validatePack(
+          packWith(
+            [
+              '........',
+              '........',
+              '........',
+              '........',
+              '........',
+              '11...111',
+              '000..000',
+              '3333.333',
+            ],
+            ['line3h', 'line2h', 'single'],
+          ),
+        ),
+        isEmpty,
+      );
     });
   });
 }

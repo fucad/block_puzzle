@@ -22,6 +22,33 @@ bool canClearLineWith(Board board, Piece piece) {
   return false;
 }
 
+/// True if there is an order in which ALL [pieces] can be placed such
+/// that EVERY placement clears at least one line — the quest "opening
+/// cascade" contract: the starting tray fits right into the designed
+/// board, and each drop breaks. Leftover blocks may remain.
+bool openingCascadeExists(Board board, List<Piece> pieces) {
+  bool search(Board b, List<Piece> rest) {
+    if (rest.isEmpty) return true;
+    final triedIds = <String>{};
+    for (var i = 0; i < rest.length; i++) {
+      final piece = rest[i];
+      if (!triedIds.add(piece.id)) continue;
+      final remaining = [...rest]..removeAt(i);
+      for (var row = 0; row <= Board.size - piece.height; row++) {
+        for (var col = 0; col <= Board.size - piece.width; col++) {
+          if (!canPlace(b, piece, row, col)) continue;
+          final result = clearFullLines(stamp(b, piece, row, col));
+          if (result.lineCount == 0) continue; // every drop must break
+          if (search(result.board, remaining)) return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  return search(board, pieces);
+}
+
 /// True if the [pieces] can ALL be placed in some order (clears happen
 /// between placements, exactly as in play). Backtracking with a node cap:
 /// if the search budget runs out undecided, assume playable — a rare

@@ -172,6 +172,16 @@ lose-screen/80%-banner visual eyeballing during play, a CI workflow
 - Session ended mid slice-D device verification at user request; all
   code committed on `dev`, working tree clean, 43/43 tests green.
 
+### 2026-07-15 — Opening cascade (all three opening pieces break)
+- Playtest: the opening break was too weak — only one of the three tray
+  pieces cleared. Strengthened the contract from "≥1 piece breaks" to a
+  full **opening cascade**: there must be an order in which ALL THREE
+  tray pieces fit and EVERY placement clears ≥1 line (leftover board
+  blocks are fine). New solver `openingCascadeExists`; validator now
+  enforces it; all 40 stages redesigned with parallel gap rows/columns
+  sized to their trays (colors matched to breakers). CONTRIBUTING_QUESTS
+  documents the design pattern. Solver + validator tests added.
+
 ### 2026-07-14 — Playtest round 2: colors, slowdown investigation
 - Block palette brightened (user: too dark next to genre peers);
   icon/splash regenerated to match.

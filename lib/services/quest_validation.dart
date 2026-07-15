@@ -58,19 +58,18 @@ List<String> validatePack(QuestPack pack) {
       }
     }
 
-    // Opening-tray design contract: the whole tray must be placeable in
-    // some order, and at least one tray piece must be able to break a
-    // pre-placed line immediately (the stage's opening satisfaction).
+    // Opening-cascade contract (strengthened 2026-07-14 after playtest
+    // feedback): there must be an order in which ALL THREE tray pieces
+    // fit into the designed board with EVERY placement breaking at
+    // least one line. Leftover blocks are fine; a dud placement is not.
     final tray = stage.tray;
     if (tray != null) {
       final pieces = [for (final id in tray) pieceById[id]!];
-      if (!canPlaceAllInSomeOrder(stage.board, pieces)) {
-        problems.add('$where: opening tray cannot be fully placed');
-      }
-      if (!pieces.any((p) => canClearLineWith(stage.board, p))) {
+      if (!openingCascadeExists(stage.board, pieces)) {
         problems.add(
-          '$where: no opening tray piece can clear a line on the '
-          'starting board — the opening break is the point of "tray"',
+          '$where: no full opening cascade — all three tray pieces must '
+          'be placeable in some order with every placement clearing a '
+          'line (design the board gaps to fit the tray)',
         );
       }
     }
