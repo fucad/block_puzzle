@@ -11,8 +11,11 @@ const Map<GemColor, Color> gemColors = {
   GemColor.green: Color(0xFF66DD66),
 };
 
-/// Blocks that carry a gem render in gold regardless of theme palette.
-const Color gemBlockGold = Color(0xFFE8B454);
+/// Neutral light tile for a quest stage's pre-placed puzzle — both plain
+/// pre-placed blocks and gem-carrying blocks use it, so the puzzle reads
+/// as one light substrate with gems on top and the player's own vivid
+/// pieces stand out against it.
+const Color puzzleBlockLight = Color(0xFFE8D6A6);
 
 /// Visual skin for the board and blocks. All rendering colors come from
 /// here so new themes are pure data (a contribution target — never locked

@@ -92,6 +92,13 @@ Quest stages may pin the FIRST tray via the stage's `tray` field (the
 "opening break" design — see CONTRIBUTING_QUESTS.md); the generator
 takes over from the second tray on.
 
+**Classic clear-focus** (`GameState.clearFocus`, set by the classic
+controller): the same generator, turned up for maximum clears/combos.
+Breakers are boosted ~9×, near-empty boards favor big/long pieces (to
+set up multi-line clears and all-clears), and among more candidate sets
+it keeps the one with the highest `clearingPotential` (a greedy estimate
+of lines the set can clear). Quest keeps the balanced defaults.
+
 Classic rolls a random seed per run (persisted); quest stages may pin a
 seed in their data.
 

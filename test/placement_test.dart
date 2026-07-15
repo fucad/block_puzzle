@@ -74,6 +74,21 @@ void main() {
       expect(placementCompletesLine(board, single, 3, 3), isFalse);
     });
 
+    test('counts multiple simultaneous lines', () {
+      // Placing a single at (7,7) completes both row 7 and column 7.
+      final board = boardFrom([
+        '.......1',
+        '.......1',
+        '.......1',
+        '.......1',
+        '.......1',
+        '.......1',
+        '.......1',
+        '1111111.',
+      ]);
+      expect(countCompletedLines(board, single, 7, 7), 2);
+    });
+
     test('agrees with the stamp+clear result across positions', () {
       final board = boardFrom([
         '11111.1.',

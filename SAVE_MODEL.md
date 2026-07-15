@@ -45,13 +45,15 @@ silently discarding progress.
   "combo": 3,
   "roundBestCombo": 7,
   "allClears": 1,                       // this run; absent in old saves -> 0
+  "clearFocus": true,                   // classic mode's easy-clears dealing
   "gems": {"red": 1}                    // collected this run (quest only)
 }
 ```
 
 Notes:
 - Board cell: `null` = empty; otherwise `c` = theme palette color index,
-  optional `g` = gem color name (quest boards only).
+  optional `g` = gem color name (quest boards only), optional `p` = true
+  for pre-placed quest puzzle blocks (rendered in the neutral light tile).
 - 64-bit integers (`rngState`, `classicRunSeed`) are stored as **strings**
   because JSON tooling commonly round-trips numbers through doubles, which
   corrupts values above 2^53.

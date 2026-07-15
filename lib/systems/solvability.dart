@@ -20,6 +20,42 @@ bool canClearLineWith(Board board, Piece piece) {
   return false;
 }
 
+/// Greedy estimate of how many lines the [pieces] can clear if played
+/// well from [board]: repeatedly place the piece+position clearing the
+/// most lines, applying clears between placements. Used to rank candidate
+/// trays in classic clear-focus mode — higher = more clears/combos.
+int clearingPotential(Board board, List<Piece> pieces) {
+  var b = board;
+  final remaining = [...pieces];
+  var total = 0;
+  while (remaining.isNotEmpty) {
+    var bestLines = -1;
+    var bestIndex = -1;
+    var bestRow = 0;
+    var bestCol = 0;
+    for (var i = 0; i < remaining.length; i++) {
+      final piece = remaining[i];
+      for (var r = 0; r <= Board.size - piece.height; r++) {
+        for (var c = 0; c <= Board.size - piece.width; c++) {
+          if (!canPlace(b, piece, r, c)) continue;
+          final lines = countCompletedLines(b, piece, r, c);
+          if (lines > bestLines) {
+            bestLines = lines;
+            bestIndex = i;
+            bestRow = r;
+            bestCol = c;
+          }
+        }
+      }
+    }
+    if (bestIndex == -1) break; // nothing else fits
+    total += bestLines;
+    b = clearFullLines(stamp(b, remaining[bestIndex], bestRow, bestCol)).board;
+    remaining.removeAt(bestIndex);
+  }
+  return total;
+}
+
 /// How a piece relates to the current board, computed in one placement
 /// scan (drives satisfaction-first tray dealing).
 class FitProfile {
