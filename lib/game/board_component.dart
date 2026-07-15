@@ -132,28 +132,55 @@ class BoardComponent extends PositionComponent
       return;
     }
 
-    // Would-clear lines glow across their full length.
-    final glow = Paint()..color = theme.lineHighlight;
+    // A line that would clear lights up entirely in the dragged piece's
+    // color and glows — a strong "this whole line breaks" signal.
+    final pieceColor = game.theme.blockColor(preview.piece.colorId);
     for (final row in preview.wouldClearRows) {
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(0, row * cell, size.x, cell).deflate(cell * 0.06),
-          Radius.circular(cell * 0.12),
-        ),
-        glow,
+      _paintClearingLine(
+        canvas,
+        Rect.fromLTWH(0, row * cell, size.x, cell),
+        pieceColor,
+        cell,
       );
     }
     for (final col in preview.wouldClearCols) {
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(col * cell, 0, cell, size.y).deflate(cell * 0.06),
-          Radius.circular(cell * 0.12),
-        ),
-        glow,
+      _paintClearingLine(
+        canvas,
+        Rect.fromLTWH(col * cell, 0, cell, size.y),
+        pieceColor,
+        cell,
       );
     }
 
     _renderPreviewGhost(canvas, preview, cell);
+  }
+
+  /// Fills a would-clear line with the piece color and a bright glow so
+  /// the whole line reads as "about to break" (reference behavior).
+  void _paintClearingLine(Canvas canvas, Rect line, Color color, double cell) {
+    // Fill each cell of the line in the piece color (beveled block look).
+    if (line.width > line.height) {
+      for (var x = line.left; x < line.right - 1; x += cell) {
+        paintBlock(canvas, Rect.fromLTWH(x, line.top, cell, cell), color);
+      }
+    } else {
+      for (var y = line.top; y < line.bottom - 1; y += cell) {
+        paintBlock(canvas, Rect.fromLTWH(line.left, y, cell, cell), color);
+      }
+    }
+    // Bright glow: layered translucent strokes (no blur — perf).
+    for (var i = 0; i < 3; i++) {
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          line.inflate(i * 3.0).deflate(cell * 0.04),
+          Radius.circular(cell * 0.2),
+        ),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 5 - i * 1.3
+          ..color = const Color(0xFFFFFFFF).withValues(alpha: 0.55 - i * 0.16),
+      );
+    }
   }
 
   /// Eight-point star, the quest gem sitting inside its gold block.

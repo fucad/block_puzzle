@@ -3,21 +3,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../state/providers.dart';
 
-/// Sound / haptics toggles, reset progress, and about+licenses. Theme
+/// Sound / haptics toggles, restart, reset progress, and about+licenses.
+/// [onRestart] (when in a game) adds a "Restart round" action. Theme
 /// picker appears here once a second theme ships (M4 seam).
-void showSettingsSheet(BuildContext context) {
+void showSettingsSheet(BuildContext context, {VoidCallback? onRestart}) {
   showModalBottomSheet<void>(
     context: context,
     backgroundColor: const Color(0xFF2C3A6B),
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
-    builder: (_) => const _SettingsSheet(),
+    builder: (_) => _SettingsSheet(onRestart: onRestart),
   );
 }
 
 class _SettingsSheet extends ConsumerWidget {
-  const _SettingsSheet();
+  const _SettingsSheet({this.onRestart});
+
+  final VoidCallback? onRestart;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -33,6 +36,16 @@ class _SettingsSheet extends ConsumerWidget {
               'Settings',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
             ),
+            if (onRestart != null)
+              ListTile(
+                leading: const Icon(Icons.refresh_rounded),
+                title: const Text('Restart round'),
+                subtitle: const Text('Start this round over'),
+                onTap: () {
+                  Navigator.pop(context);
+                  onRestart!();
+                },
+              ),
             SwitchListTile(
               title: const Text('Sound'),
               secondary: const Icon(Icons.volume_up_rounded),

@@ -3,13 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/quest.dart';
 import '../state/quest_game_controller.dart';
+import '../state/quest_providers.dart';
 import 'quest_screen.dart';
 
 /// Stage outcome. Win: "Level Complete!" + back to the map. Lose: the
 /// reference "So Close!" screen — progress toward the goal, Retry, back.
 /// Replaces the QuestScreen route; Retry pushes a fresh one.
 class QuestResultScreen extends ConsumerWidget {
-  const QuestResultScreen({super.key});
+  const QuestResultScreen({super.key, this.praise});
+
+  /// Praise carried over from the winning combo (shown under the title).
+  final String? praise;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -47,6 +51,10 @@ class QuestResultScreen extends ConsumerWidget {
                   shadows: [Shadow(color: Colors.black26, blurRadius: 8)],
                 ),
               ),
+              if (won && praise != null) ...[
+                const SizedBox(height: 12),
+                _AnimatedPraise(text: praise!),
+              ],
               const Spacer(),
               if (won)
                 const Icon(
@@ -116,6 +124,11 @@ class QuestResultScreen extends ConsumerWidget {
   }
 
   void _backToMap(BuildContext context, WidgetRef ref) {
+    final run = ref.read(questGameProvider);
+    if (run != null && run.status == QuestStatus.won) {
+      // Tell the map to animate the advance to the next stage.
+      ref.read(questJustCompletedProvider.notifier).set(run.levelNumber);
+    }
     ref.read(questGameProvider.notifier).quit();
     Navigator.pop(context);
   }
@@ -167,6 +180,51 @@ class _ProgressRecap extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Praise text that pops in with a scale+fade (matches the in-game popup
+/// feel) rather than appearing as plain text.
+class _AnimatedPraise extends StatefulWidget {
+  const _AnimatedPraise({required this.text});
+
+  final String text;
+
+  @override
+  State<_AnimatedPraise> createState() => _AnimatedPraiseState();
+}
+
+class _AnimatedPraiseState extends State<_AnimatedPraise>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 500),
+  )..forward();
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scale = CurvedAnimation(parent: _c, curve: Curves.easeOutBack);
+    return ScaleTransition(
+      scale: scale,
+      child: FadeTransition(
+        opacity: _c,
+        child: Text(
+          widget.text,
+          style: const TextStyle(
+            fontSize: 30,
+            fontWeight: FontWeight.w900,
+            color: Color(0xFFFFE082),
+            shadows: [Shadow(color: Colors.black38, blurRadius: 8)],
+          ),
+        ),
+      ),
     );
   }
 }

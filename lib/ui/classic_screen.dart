@@ -119,7 +119,13 @@ class _ClassicScreenState extends ConsumerState<ClassicScreen> {
                     ),
                     const Spacer(),
                     IconButton(
-                      onPressed: () => showSettingsSheet(context),
+                      onPressed: () => showSettingsSheet(
+                        context,
+                        onRestart: () {
+                          _gameOverShown = false;
+                          ref.read(classicGameProvider.notifier).startNew();
+                        },
+                      ),
                       icon: const Icon(Icons.settings),
                       color: Colors.white70,
                     ),
