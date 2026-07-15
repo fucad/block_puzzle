@@ -46,6 +46,8 @@ silently discarding progress.
   "roundBestCombo": 7,
   "allClears": 1,                       // this run; absent in old saves -> 0
   "clearFocus": true,                   // classic mode's easy-clears dealing
+  "gemGoal": {"red": 8},                // quest gem stage target (else absent)
+  "trayGems": [{"0": "red"}, {}, {}],   // gems on each tray slot (else absent)
   "gems": {"red": 1}                    // collected this run (quest only)
 }
 ```

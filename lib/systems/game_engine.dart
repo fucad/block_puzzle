@@ -60,22 +60,33 @@ class GameEngine {
     Board? board,
     List<String>? initialTray,
     bool clearFocus = false,
+    Map<GemColor, int> gemGoal = const {},
   }) {
     assert(initialTray == null || initialTray.length == traySize);
     assert(initialTray?.every(pieceById.containsKey) ?? true);
     final startBoard = board ?? Board.empty();
     final rng = GameRng(seed);
-    final tray =
-        initialTray ??
-        [
-          for (final p in PieceGenerator(
-            rng,
-          ).nextTray(startBoard, clearFocus: clearFocus))
-            p.id,
-        ];
+    final gen = PieceGenerator(rng);
+
+    final List<String> tray;
+    final List<Map<int, GemColor>> trayGems;
+    if (initialTray != null) {
+      // The designed opening break is gem-free; gems start on the next tray.
+      tray = initialTray;
+      trayGems = [for (final _ in tray) const <int, GemColor>{}];
+    } else {
+      final pieces = gen.nextTray(startBoard, clearFocus: clearFocus);
+      tray = [for (final p in pieces) p.id];
+      trayGems = gemGoal.isEmpty
+          ? [for (final _ in pieces) const <int, GemColor>{}]
+          : gen.assignGems(pieces, gemGoal);
+    }
+
     return GameState(
       board: startBoard,
       tray: List.of(tray),
+      trayGems: trayGems,
+      gemGoal: gemGoal,
       rngState: rng.state,
       score: 0,
       combo: 0,
@@ -97,7 +108,13 @@ class GameEngine {
     final piece = pieceById[pieceId]!;
     if (!placement.canPlace(state.board, piece, row, col)) return null;
 
-    final stamped = placement.stamp(state.board, piece, row, col);
+    final stamped = placement.stampWithGems(
+      state.board,
+      piece,
+      row,
+      col,
+      state.gemsForSlot(trayIndex),
+    );
     final clear = clearFullLines(stamped);
 
     // Combo: any clearing placement extends the streak; a placement that
@@ -110,27 +127,45 @@ class GameEngine {
     }
     if (allClear) delta += allClearBonus;
 
+    // Merge any collected gems first — the refill spawns only colors still
+    // needed after this placement.
+    final gems = state.gemsCollected;
+    final updatedCollected = clear.gems.isEmpty
+        ? gems
+        : {
+            for (final color in GemColor.values)
+              if ((gems[color] ?? 0) + (clear.gems[color] ?? 0) > 0)
+                color: (gems[color] ?? 0) + (clear.gems[color] ?? 0),
+          };
+
     var tray = [
       for (var i = 0; i < state.tray.length; i++)
         i == trayIndex ? null : state.tray[i],
+    ];
+    var trayGems = [
+      for (var i = 0; i < state.tray.length; i++)
+        if (i == trayIndex) const <int, GemColor>{} else state.gemsForSlot(i),
     ];
     var rngState = state.rngState;
     final trayRefilled = tray.every((id) => id == null);
     if (trayRefilled) {
       final rng = GameRng.fromState(rngState);
-      tray = [
-        for (final p in PieceGenerator(
-          rng,
-        ).nextTray(clear.board, clearFocus: state.clearFocus))
-          p.id,
-      ];
+      final gen = PieceGenerator(rng);
+      final pieces = gen.nextTray(clear.board, clearFocus: state.clearFocus);
+      tray = [for (final p in pieces) p.id];
+      trayGems = state.gemGoal.isEmpty
+          ? [for (final _ in pieces) const <int, GemColor>{}]
+          : gen.assignGems(pieces, {
+              for (final e in state.gemGoal.entries)
+                e.key: e.value - (updatedCollected[e.key] ?? 0),
+            });
       rngState = rng.state;
     }
 
-    final gems = state.gemsCollected;
     final nextState = state.copyWith(
       board: clear.board,
       tray: tray,
+      trayGems: trayGems,
       rngState: rngState,
       score: state.score + delta,
       combo: combo,
@@ -138,13 +173,7 @@ class GameEngine {
           ? combo
           : state.roundBestCombo,
       allClears: allClear ? state.allClears + 1 : state.allClears,
-      gemsCollected: clear.gems.isEmpty
-          ? gems
-          : {
-              for (final color in GemColor.values)
-                if ((gems[color] ?? 0) + (clear.gems[color] ?? 0) > 0)
-                  color: (gems[color] ?? 0) + (clear.gems[color] ?? 0),
-            },
+      gemsCollected: updatedCollected,
     );
     return PlacementOutcome(
       nextState,

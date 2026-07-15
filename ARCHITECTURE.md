@@ -92,6 +92,14 @@ Quest stages may pin the FIRST tray via the stage's `tray` field (the
 "opening break" design — see CONTRIBUTING_QUESTS.md); the generator
 takes over from the second tray on.
 
+**Quest gem stages** (`GameState.gemGoal` non-empty): gems ride on the
+generated tray pieces rather than being pre-placed. After drawing a tray,
+`assignGems` attaches gems to some pieces, drawing colors only from those
+still needed (goal − collected); a color that's fully collected stops
+spawning. A placed gem is collected when a line through it clears
+(`GameState.trayGems` carries the pending gems per tray slot). Goals can
+exceed what's ever on the board, and over-collecting is fine (win is ≥).
+
 **Classic clear-focus** (`GameState.clearFocus`, set by the classic
 controller): the same generator, turned up for maximum clears/combos.
 Breakers are boosted ~9×, near-empty boards favor big/long pieces (to

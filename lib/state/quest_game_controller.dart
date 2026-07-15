@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../models/cell.dart';
 import '../models/game_state.dart';
 import '../models/quest.dart';
 import '../systems/game_engine.dart';
@@ -65,6 +66,12 @@ class QuestGameController extends Notifier<QuestRun?> {
 
   void start(QuestPack pack, QuestStage stage, {required int levelNumber}) {
     final seed = stage.seed ?? DateTime.now().microsecondsSinceEpoch;
+    // Gem stages: gems ride on the generated tray pieces, spawned only for
+    // colors still needed — so the goal can exceed what's on the board.
+    final gemGoal = switch (stage.goal) {
+      GemsGoal(counts: final c) => c,
+      ScoreGoal() => const <GemColor, int>{},
+    };
     state = QuestRun(
       pack: pack,
       stage: stage,
@@ -73,6 +80,7 @@ class QuestGameController extends Notifier<QuestRun?> {
         seed,
         board: stage.board,
         initialTray: stage.tray,
+        gemGoal: gemGoal,
       ),
       status: QuestStatus.playing,
     );
