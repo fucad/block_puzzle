@@ -42,13 +42,25 @@ required.
 
 ### The opening tray (`tray`)
 
-Every stage should open with a satisfying break: give it a hand-picked
-first tray (exactly 3 catalog piece ids) and design the pre-placed board
-so at least one of those pieces completes a line immediately. The
-validator enforces both rules when `tray` is present: the three pieces
-must be placeable in some order, and one of them must be able to clear a
-line on the starting board. After the opening tray is used up, pieces
-come from the normal generator.
+Every stage opens with a **full cascade**: the three hand-picked tray
+pieces must slot into gaps you design into the board, and there must be
+an order in which EVERY one of the three placements clears at least one
+line. Leftover blocks on the board are fine — a placement that doesn't
+break is not. The validator enforces this whenever `tray` is present.
+After the opening tray is used up, pieces come from the normal
+generator.
+
+Design tips that make cascades easy to reason about:
+
+- Keep the opening lines **parallel** (all rows, or all columns) —
+  lines that cross steal cells from each other when they clear.
+- Multi-line pieces are the spice: `square2`/`sH`/`zH`/`corner3*`
+  spanning two nearly-full rows clear both at once; `square3`,
+  `rect3x2`, `corner5*`, `sV`/`zV`, `tRight`/`tLeft` can clear three.
+- Match each line's block color to the piece that completes it
+  (piece colors are in `lib/models/piece_catalog.dart`).
+- Gems inside cascade lines collect instantly (great feel); keep some
+  gems outside the cascade so the goal continues past the opening.
 
 Piece ids are the entries in `lib/models/piece_catalog.dart` (`single`,
 `line2h`…`line5v`, `square2`, `square3`, `rect2x3`, `rect3x2`,
