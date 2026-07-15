@@ -41,6 +41,10 @@ class SaveData {
     this.allTimeBestCombo = 0,
     this.classicRun,
     this.classicRunSeed,
+    this.questRun,
+    this.questRunPackId,
+    this.questRunStageId,
+    this.questRunLevelNumber,
     this.questCompleted = const {},
     this.lastQuestFetchEpochMs,
   });
@@ -57,6 +61,14 @@ class SaveData {
   /// Seed the resumable run started from (diagnostics / bug reproduction).
   final int? classicRunSeed;
 
+  /// In-progress quest attempt to resume after leaving the stage or an app
+  /// kill; null when none. Reconstructing the full [QuestRun] needs the
+  /// pack/stage from the catalog, so we also store the ids and level.
+  final GameState? questRun;
+  final String? questRunPackId;
+  final String? questRunStageId;
+  final int? questRunLevelNumber;
+
   /// Completed quest stage ids, keyed by pack id.
   final Map<String, Set<String>> questCompleted;
 
@@ -70,6 +82,11 @@ class SaveData {
     GameState? classicRun,
     bool clearClassicRun = false,
     int? classicRunSeed,
+    GameState? questRun,
+    String? questRunPackId,
+    String? questRunStageId,
+    int? questRunLevelNumber,
+    bool clearQuestRun = false,
     Map<String, Set<String>>? questCompleted,
     int? lastQuestFetchEpochMs,
   }) {
@@ -81,6 +98,16 @@ class SaveData {
       classicRunSeed: clearClassicRun
           ? null
           : (classicRunSeed ?? this.classicRunSeed),
+      questRun: clearQuestRun ? null : (questRun ?? this.questRun),
+      questRunPackId: clearQuestRun
+          ? null
+          : (questRunPackId ?? this.questRunPackId),
+      questRunStageId: clearQuestRun
+          ? null
+          : (questRunStageId ?? this.questRunStageId),
+      questRunLevelNumber: clearQuestRun
+          ? null
+          : (questRunLevelNumber ?? this.questRunLevelNumber),
       questCompleted: questCompleted ?? this.questCompleted,
       lastQuestFetchEpochMs:
           lastQuestFetchEpochMs ?? this.lastQuestFetchEpochMs,
@@ -94,6 +121,12 @@ class SaveData {
     'allTimeBestCombo': allTimeBestCombo,
     'classicRun': classicRun?.toJson(),
     'classicRunSeed': classicRunSeed?.toString(),
+    if (questRun != null) ...{
+      'questRun': questRun!.toJson(),
+      'questRunPackId': questRunPackId,
+      'questRunStageId': questRunStageId,
+      'questRunLevelNumber': questRunLevelNumber,
+    },
     'questCompleted': questCompleted.map(
       (packId, stages) => MapEntry(packId, stages.toList()..sort()),
     ),
@@ -109,6 +142,7 @@ class SaveData {
     }
     final run = json['classicRun'] as Map?;
     final seed = json['classicRunSeed'] as String?;
+    final questRun = json['questRun'] as Map?;
     return SaveData(
       settings: Settings.fromJson(
         (json['settings'] as Map? ?? const {}).cast<String, Object?>(),
@@ -119,6 +153,12 @@ class SaveData {
           ? null
           : GameState.fromJson(run.cast<String, Object?>()),
       classicRunSeed: seed == null ? null : int.parse(seed),
+      questRun: questRun == null
+          ? null
+          : GameState.fromJson(questRun.cast<String, Object?>()),
+      questRunPackId: json['questRunPackId'] as String?,
+      questRunStageId: json['questRunStageId'] as String?,
+      questRunLevelNumber: json['questRunLevelNumber'] as int?,
       questCompleted: {
         for (final entry
             in (json['questCompleted'] as Map? ?? const {})

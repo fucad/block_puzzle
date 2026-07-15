@@ -288,9 +288,22 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
   }
 
   void _play(BuildContext context, _LevelNode node) {
-    ref
-        .read(questGameProvider.notifier)
-        .start(node.pack, node.stage, levelNumber: node.number);
+    final controller = ref.read(questGameProvider.notifier);
+    final save = ref.read(saveDataProvider);
+    // Resume a persisted in-progress attempt of this exact stage; otherwise
+    // start it fresh from its layout.
+    if (save.questRun != null &&
+        save.questRunPackId == node.pack.id &&
+        save.questRunStageId == node.stage.id) {
+      controller.resume(
+        node.pack,
+        node.stage,
+        levelNumber: node.number,
+        game: save.questRun!,
+      );
+    } else {
+      controller.start(node.pack, node.stage, levelNumber: node.number);
+    }
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const QuestScreen()),

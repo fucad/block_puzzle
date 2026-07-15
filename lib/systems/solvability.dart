@@ -8,6 +8,7 @@ import '../models/piece.dart';
 import 'game_constants.dart';
 import 'line_clear.dart';
 import 'placement.dart';
+import 'scoring.dart';
 
 /// True if some position of [piece] on [board] completes ≥1 line.
 bool canClearLineWith(Board board, Piece piece) {
@@ -143,6 +144,42 @@ bool openingCascadeExists(Board board, List<Piece> pieces) {
   }
 
   return search(board, pieces);
+}
+
+/// Maximum score obtainable by placing [pieces] as an opening on [board],
+/// searched over every order and position, with clears, combo, and the
+/// all-clear bonus scored exactly as in play. This is the "just cash the
+/// opening" ceiling: if the designed opening can empty the board, the
+/// +[allClearBonus] is baked in here. Score goals must sit ABOVE this so a
+/// stage can't be won by the opening cascade alone. Cheap — the opening is
+/// only three pieces.
+int maxOpeningScore(Board board, List<Piece> pieces) {
+  var best = 0;
+  void search(Board b, List<Piece> rest, int combo, int score) {
+    if (score > best) best = score;
+    if (rest.isEmpty) return;
+    final triedIds = <String>{};
+    for (var i = 0; i < rest.length; i++) {
+      final piece = rest[i];
+      if (!triedIds.add(piece.id)) continue;
+      final remaining = [...rest]..removeAt(i);
+      for (var row = 0; row <= Board.size - piece.height; row++) {
+        for (var col = 0; col <= Board.size - piece.width; col++) {
+          if (!canPlace(b, piece, row, col)) continue;
+          final result = clearFullLines(stamp(b, piece, row, col));
+          final broke = result.lineCount > 0;
+          final newCombo = broke ? combo + 1 : 0;
+          var delta = piece.cells.length * pointsPerCell;
+          if (broke) delta += lineScore(result.lineCount) + comboBonus(newCombo);
+          if (broke && result.board.isEmpty) delta += allClearBonus;
+          search(result.board, remaining, newCombo, score + delta);
+        }
+      }
+    }
+  }
+
+  search(board, pieces, 0, 0);
+  return best;
 }
 
 /// True if the [pieces] can ALL be placed in some order (clears happen

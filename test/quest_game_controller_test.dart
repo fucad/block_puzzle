@@ -156,11 +156,70 @@ void main() {
     expect(run.game.board.at(7, 7), isNull);
   });
 
-  test('quit clears the run', () async {
+  test('quit drops the in-memory run but keeps the saved snapshot', () async {
     final container = await makeContainer();
     final controller = container.read(questGameProvider.notifier);
     controller.start(packWith(scoreStage), scoreStage, levelNumber: 1);
     controller.quit();
     expect(container.read(questGameProvider), isNull);
+    // The persisted attempt survives so the map can resume it later.
+    expect(container.read(saveDataProvider).questRun, isNotNull);
+    expect(container.read(saveDataProvider).questRunStageId, 's1');
+  });
+
+  test('starting persists the attempt; leaving then resuming restores it',
+      () async {
+    final container = await makeContainer();
+    final controller = container.read(questGameProvider.notifier);
+    controller.start(packWith(scoreStage), scoreStage, levelNumber: 3);
+
+    var saved = container.read(saveDataProvider);
+    expect(saved.questRun, isNotNull);
+    expect(saved.questRunPackId, 'test');
+    expect(saved.questRunStageId, 's1');
+    expect(saved.questRunLevelNumber, 3);
+
+    // A non-clearing placement keeps the stage playing and updates the save.
+    controller.debugLoadRun(
+      container.read(questGameProvider)!.copyWith(
+        game: container
+            .read(questGameProvider)!
+            .game
+            .copyWith(tray: ['single', 'single', 'single']),
+      ),
+    );
+    controller.place(0, 0, 7); // fills (0,7), completes no line
+    saved = container.read(saveDataProvider);
+    expect(saved.questRun!.score, 1);
+
+    // Leave, then resume from the saved snapshot.
+    final snapshot = saved.questRun!;
+    controller.quit();
+    controller.resume(
+      packWith(scoreStage),
+      scoreStage,
+      levelNumber: 3,
+      game: snapshot,
+    );
+    final run = container.read(questGameProvider)!;
+    expect(run.status, QuestStatus.playing);
+    expect(run.game.score, 1);
+  });
+
+  test('winning clears the persisted run', () async {
+    final container = await makeContainer();
+    final controller = container.read(questGameProvider.notifier);
+    controller.start(packWith(scoreStage), scoreStage, levelNumber: 1);
+    controller.debugLoadRun(
+      container.read(questGameProvider)!.copyWith(
+        game: container
+            .read(questGameProvider)!
+            .game
+            .copyWith(tray: ['single', 'single', 'single']),
+      ),
+    );
+    controller.place(0, 7, 7); // completes row 7, reaches target 11
+    expect(container.read(questGameProvider)!.status, QuestStatus.won);
+    expect(container.read(saveDataProvider).questRun, isNull);
   });
 }

@@ -83,22 +83,32 @@ toward what's reachable.
 
 ### Goals
 
-- Score: `{ "type": "score", "target": 700 }` — reach the score.
-- Gems: `{ "type": "gems", "counts": { "red": 8, "purple": 6 } }` —
-  collect *at least* the listed count of each color. Gems ride on the
+- Score: `{ "type": "score", "target": 700 }` — reach the score. The
+  target **must sit above the opening ceiling**: the most the opening tray
+  can score on its own, *including the +300 all-clear bonus* if the opening
+  can empty the board. Otherwise the cascade wins the stage on move three
+  and it plays as a freebie. The validator computes this ceiling and
+  rejects any target at or below it, so a designed opening that all-clears
+  needs a target comfortably past ~400. Current packs ramp ~500 → ~1200.
+- Gems: `{ "type": "gems", "counts": { "red": 5, "purple": 5, "blue": 5 } }`
+  — collect *at least* the listed count of each color. Gems ride on the
   generated tray pieces (spawned only for colors you still need), so the
   goal does NOT depend on gems being pre-placed on the board — you don't
   put gems in the board at all for a gem goal, and counts can be large.
   Collecting more than the goal is fine. Once a color is fully collected
-  it stops appearing on new pieces.
+  it stops appearing on new pieces. **Prefer multi-color goals** — aim for
+  **3 to 5 gem types**, even in early stages; a single-color gem goal reads
+  as flat. Counts can grow aggressively as the pack progresses.
 
 ### Rules the validator enforces
 
 - Boards are exactly 8×8 with only the characters above.
 - No row or column may start out already complete.
 - At least 20 empty cells (otherwise the stage is likely unplayable).
-- Gem goals must be satisfiable by the gems on the board.
-- Score targets between 50 and 20000.
+- Gem goal counts are each between 1 and 60 (gems come from the tray, so
+  the board doesn't need to hold them).
+- Score targets between 50 and 20000, **and above the opening ceiling**
+  (the opening tray can't win the stage by itself — all-clear included).
 - Stage ids unique within a pack; pack ids unique in the manifest.
 - The manifest checksum must match the pack file.
 

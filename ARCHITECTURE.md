@@ -90,7 +90,10 @@ Tray generation algorithm (documented contract, tested):
 
 Quest stages may pin the FIRST tray via the stage's `tray` field (the
 "opening break" design — see CONTRIBUTING_QUESTS.md); the generator
-takes over from the second tray on.
+takes over from the second tray on. A score goal must exceed the
+**opening ceiling** — `maxOpeningScore` (in `solvability.dart`) is the most
+that opening tray can score alone, all-clear bonus included — so the
+cascade can't win the stage outright; the validator enforces this.
 
 **Quest gem stages** (`GameState.gemGoal` non-empty): gems ride on the
 generated tray pieces rather than being pre-placed. After drawing a tray,
@@ -126,7 +129,10 @@ Schema is versioned and strictly parsed. Details: `CONTRIBUTING_QUESTS.md`.
 One service (`lib/services/`); versioned JSON save model documented in
 `SAVE_MODEL.md`: settings, classic high score + resumable in-progress run
 (board, tray, RNG state, score, combo), quest progress, best combos, quest
-cache metadata.
+cache metadata. **Quest attempts are also resumable**: the in-progress
+`GameState` plus its pack/stage/level ids are persisted, so leaving a stage
+or killing the app resumes it exactly (the map reattaches pack/stage from
+the catalog). The snapshot is cleared on win, loss, or restart.
 
 ## Key decisions
 

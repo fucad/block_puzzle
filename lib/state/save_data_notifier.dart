@@ -41,6 +41,26 @@ class SaveDataNotifier extends Notifier<SaveData> {
     );
   }
 
+  /// Persists the in-progress quest attempt so leaving the stage (or an
+  /// app kill) resumes it exactly where it was.
+  void storeQuestRun(
+    GameState run, {
+    required String packId,
+    required String stageId,
+    required int levelNumber,
+  }) => _update(
+    state.copyWith(
+      questRun: run,
+      questRunPackId: packId,
+      questRunStageId: stageId,
+      questRunLevelNumber: levelNumber,
+    ),
+  );
+
+  /// Drops the resumable quest snapshot (stage won, lost, or abandoned via
+  /// retry from scratch).
+  void clearQuestRun() => _update(state.copyWith(clearQuestRun: true));
+
   /// Stamps the quest-fetch throttle (see questCatalogProvider).
   void markQuestFetch(int epochMs) =>
       _update(state.copyWith(lastQuestFetchEpochMs: epochMs));

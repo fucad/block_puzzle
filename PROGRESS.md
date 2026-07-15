@@ -172,6 +172,24 @@ lose-screen/80%-banner visual eyeballing during play, a CI workflow
 - Session ended mid slice-D device verification at user request; all
   code committed on `dev`, working tree clean, 43/43 tests green.
 
+### 2026-07-16 — Playtest: quest resume, gem tiles, difficulty tuning
+- Quest attempts now resume: SaveData carries questRun (GameState) +
+  pack/stage/level ids; controller persists on start/each move, clears on
+  win/loss; quit keeps the snapshot; the map's _play resumes it if the
+  saved run matches the tapped node. Leaving a stage or app-kill no longer
+  loses progress (parity with classic).
+- Gem-bearing blocks always draw on the neutral light tile — in the tray
+  and once placed — so the gem never fights the piece color (before, only
+  pre-placed gems were light).
+- Difficulty (user feedback "too easy"): score targets raised but floored
+  ABOVE each stage's opening ceiling. Added solvability.maxOpeningScore
+  (best score the opening tray can make, all-clear +300 included) and a
+  validator rule rejecting score targets ≤ that ceiling — four stages
+  (s01/s02/t01/d01) were literally winnable from the opening before.
+  New score ramps ~500→1200. Gem goals: every gem stage now asks for 3–5
+  colors (was many single-color), counts grow more aggressively. Opening
+  cascade kept as-is per user; the higher goals carry the difficulty.
+
 ### 2026-07-16 — Gems ride on tray pieces (quest gem stages reworked)
 - User: pre-placing all gems on the grid made stages swingy and capped
   goals low. Now gems spawn on generated tray pieces (assignGems, ~50%
@@ -180,8 +198,8 @@ lose-screen/80%-banner visual eyeballing during play, a CI workflow
   A placed gem is collected when a line through it clears.
 - Model: GameState gains trayGems (per-slot cell→color) + gemGoal;
   placement.stampWithGems; engine threads gems on place/refill; the
-  controller passes the goal; board renders placed gems in the piece
-  color (pre-placed stay light); tray pieces show their gems.
+  controller passes the goal; board + tray render gems (gem tiles later
+  moved to the neutral light substrate everywhere — see 07-16 playtest).
 - Validator: dropped the "board must contain the goal's gems" rule
   (obsolete); added a gem-count sanity range. All 20 gem stages had
   their board gems stripped and goals raised (single 8 / two 6 / three 5).
