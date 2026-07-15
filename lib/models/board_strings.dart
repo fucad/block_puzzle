@@ -34,16 +34,19 @@ Board parseBoardRows(List<String> rows) {
       );
     }
     for (final ch in row.split('')) {
+      // Cells authored in a board string are the pre-placed puzzle
+      // (quest stages) — mark them so they render in the neutral light
+      // color rather than a vivid player-block color.
       if (ch == '.') {
         cells.add(null);
       } else if (gemLetters.containsKey(ch)) {
-        cells.add(Cell(gemBlockColorId, gem: gemLetters[ch]));
+        cells.add(Cell(gemBlockColorId, gem: gemLetters[ch], preplaced: true));
       } else {
         final colorId = int.tryParse(ch);
         if (colorId == null || colorId > 7) {
           throw FormatException('Unknown board char "$ch" in row $r');
         }
-        cells.add(Cell(colorId));
+        cells.add(Cell(colorId, preplaced: true));
       }
     }
   }

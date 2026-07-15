@@ -21,12 +21,18 @@ import 'solvability.dart';
 ///    sets that contain a breaker when a break is possible at all). The
 ///    player might not find the order, but one always exists while the
 ///    board allows it.
+///
+/// [clearFocus] (classic mode) turns this up: breakers are boosted far
+/// harder, open boards favor big/long pieces to set up multi-line clears
+/// and all-clears, and among more candidate sets the one that can clear
+/// the most lines (by [clearingPotential]) is chosen — so clears and
+/// combos happen almost every tray.
 class PieceGenerator {
   PieceGenerator(this.rng);
 
   final GameRng rng;
 
-  List<Piece> nextTray(Board board) {
+  List<Piece> nextTray(Board board, {bool clearFocus = false}) {
     final profiles = {
       for (final piece in pieceCatalog) piece.id: FitProfile.of(board, piece),
     };
@@ -38,12 +44,23 @@ class PieceGenerator {
       for (final piece in pieceCatalog)
         if (profiles[piece.id]!.canBreak) piece.id,
     };
+
+    final filled = board.cells.where((c) => c != null).length;
+    final openBoard =
+        clearFocus &&
+        filled / (Board.size * Board.size) < classicOpenBoardFullness;
+    final breakMult = clearFocus ? classicBreakerBoost : breakerBoost;
+
     double effectiveWeight(Piece p) {
       final prof = profiles[p.id]!;
-      return p.weight *
+      var w =
+          p.weight *
           (prof.fits ? 1.0 : fitPenalty) *
-          (prof.canBreak ? breakerBoost : 1.0) *
+          (prof.canBreak ? breakMult : 1.0) *
           (1 + prof.bestContact * snugBoost);
+      // Open board in classic: hand out big/long pieces to fill fast.
+      if (openBoard) w *= 1 + p.cells.length * classicBigPieceBias;
+      return w;
     }
 
     List<Piece> draw() {
@@ -61,9 +78,29 @@ class PieceGenerator {
       return tray;
     }
 
+    final attempts = clearFocus ? classicDrawAttempts : traySetDrawAttempts;
+
+    if (clearFocus) {
+      // Keep the playable set that can clear the most lines.
+      List<Piece>? bestSet;
+      var bestScore = -1;
+      for (var attempt = 0; attempt < attempts; attempt++) {
+        final tray = draw();
+        if (!canPlaceAllInSomeOrder(board, tray)) continue;
+        final score = clearingPotential(board, tray);
+        if (score > bestScore) {
+          bestScore = score;
+          bestSet = tray;
+          // A double-line-or-better set is plenty satisfying; take it.
+          if (score >= 2) break;
+        }
+      }
+      if (bestSet != null) return bestSet;
+    }
+
     List<Piece>? solvableFallback;
     var best = draw();
-    for (var attempt = 0; attempt < traySetDrawAttempts; attempt++) {
+    for (var attempt = 0; attempt < attempts; attempt++) {
       final tray = attempt == 0 ? best : draw();
       best = tray;
       if (!canPlaceAllInSomeOrder(board, tray)) continue;

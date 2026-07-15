@@ -38,5 +38,25 @@ const double snugBoost = 3.0;
 /// playable in sequence (and ideally contains a breaker) before settling.
 const int traySetDrawAttempts = 6;
 
+// --- Classic "clear focus" dealing -----------------------------------
+// Classic mode leans hard into clears and combos: the whole point is the
+// satisfaction of breaking lines, so deals should almost always enable a
+// clear, and open boards should hand out big/long pieces to set up
+// multi-line clears and all-clears.
+
+/// Breaker weight multiplier in clear-focus mode (vs [breakerBoost]).
+const double classicBreakerBoost = 9.0;
+
+/// On a near-empty board, favor large pieces this strongly (weight ×
+/// `1 + cellCount * classicBigPieceBias`) so rows fill fast.
+const double classicBigPieceBias = 0.6;
+
+/// Board fill fraction below which the big-piece bias applies.
+const double classicOpenBoardFullness = 0.2;
+
+/// Clear-focus draws more candidate sets and keeps the one whose pieces
+/// can clear the most lines when played well.
+const int classicDrawAttempts = 14;
+
 /// Search budget for canPlaceAllInSomeOrder; past this, assume playable.
 const int solvabilityNodeCap = 1500;

@@ -12,6 +12,7 @@ class GameState {
     required this.combo,
     required this.roundBestCombo,
     this.allClears = 0,
+    this.clearFocus = false,
     this.gemsCollected = const {},
   });
 
@@ -33,6 +34,9 @@ class GameState {
   /// All-clears earned this run (drives the end-of-run summary variants).
   final int allClears;
 
+  /// Classic mode: bias tray generation hard toward clears/combos.
+  final bool clearFocus;
+
   /// Gems collected so far this run (quest mode).
   final Map<GemColor, int> gemsCollected;
 
@@ -44,6 +48,7 @@ class GameState {
     int? combo,
     int? roundBestCombo,
     int? allClears,
+    bool? clearFocus,
     Map<GemColor, int>? gemsCollected,
   }) {
     return GameState(
@@ -54,6 +59,7 @@ class GameState {
       combo: combo ?? this.combo,
       roundBestCombo: roundBestCombo ?? this.roundBestCombo,
       allClears: allClears ?? this.allClears,
+      clearFocus: clearFocus ?? this.clearFocus,
       gemsCollected: gemsCollected ?? this.gemsCollected,
     );
   }
@@ -68,6 +74,7 @@ class GameState {
     'combo': combo,
     'roundBestCombo': roundBestCombo,
     'allClears': allClears,
+    if (clearFocus) 'clearFocus': true,
     'gems': gemsCollected.map((color, count) => MapEntry(color.name, count)),
   };
 
@@ -82,6 +89,7 @@ class GameState {
       roundBestCombo: json['roundBestCombo'] as int,
       // Tolerant default: saves written before this field existed.
       allClears: json['allClears'] as int? ?? 0,
+      clearFocus: json['clearFocus'] as bool? ?? false,
       gemsCollected: {
         for (final entry in gems.entries)
           GemColor.values.byName(entry.key): entry.value,

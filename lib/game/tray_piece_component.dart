@@ -110,7 +110,7 @@ class TrayPieceComponent extends PositionComponent
     if (!_dragging) return;
     _dragging = false;
     game.dragActive = false;
-    final dropped = game.tryPlace(trayIndex, _topLeftCorner());
+    final dropped = game.tryPlace(trayIndex);
     game.clearPreview();
     if (dropped == null) _returnToTray();
     // On success the state listener rebuilds the tray, removing this

@@ -172,6 +172,24 @@ lose-screen/80%-banner visual eyeballing during play, a CI workflow
 - Session ended mid slice-D device verification at user request; all
   code committed on `dev`, working tree clean, 43/43 tests green.
 
+### 2026-07-15 — Playtest round 4: preview, quest colors, classic clears
+- Ghost preview: over the board it now ALWAYS shows a pre-place, snapping
+  to the nearest legal cell (forgiving placement); the drop lands there.
+  Return-to-tray only happens when released off the board. Over-board-but-
+  no-fit shows a red invalid ghost.
+- Quest visual: pre-placed puzzle blocks AND gem cells now render in one
+  neutral light tile (Cell.preplaced flag; puzzleBlockLight), so the
+  puzzle reads as a unit and the player's vivid pieces stand out (per the
+  reference image). Player-placed cells keep palette colors.
+- Classic clears much easier: GameState.clearFocus threads a mode flag to
+  the generator — breakers boosted ~9×, open boards favor big/long pieces
+  for multi-line clears + all-clears, and the deal keeps the set with the
+  best clearingPotential. Quest keeps its balance. Deterministic per seed,
+  tests added (countCompletedLines, clearingPotential, clearFocus bias).
+- iOS: verified the project + all plugins are iOS-ready; can't build here
+  (this Mac lacks the iOS platform SDK in Xcode and a signing cert — both
+  user-side). Steps for the user in RELEASING.md / final summary.
+
 ### 2026-07-15 — Perf: thermal throttling after 5–10 min of play
 - User report: sound/vibration/animation all degrade and the phone gets
   hot after 5–10 min. Diagnosed with a monitored on-device soak: a

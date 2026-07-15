@@ -54,6 +54,7 @@ class GameEngine {
     int seed, {
     Board? board,
     List<String>? initialTray,
+    bool clearFocus = false,
   }) {
     assert(initialTray == null || initialTray.length == traySize);
     assert(initialTray?.every(pieceById.containsKey) ?? true);
@@ -61,7 +62,12 @@ class GameEngine {
     final rng = GameRng(seed);
     final tray =
         initialTray ??
-        [for (final p in PieceGenerator(rng).nextTray(startBoard)) p.id];
+        [
+          for (final p in PieceGenerator(
+            rng,
+          ).nextTray(startBoard, clearFocus: clearFocus))
+            p.id,
+        ];
     return GameState(
       board: startBoard,
       tray: List.of(tray),
@@ -69,6 +75,7 @@ class GameEngine {
       score: 0,
       combo: 0,
       roundBestCombo: 0,
+      clearFocus: clearFocus,
     );
   }
 
@@ -106,7 +113,12 @@ class GameEngine {
     final trayRefilled = tray.every((id) => id == null);
     if (trayRefilled) {
       final rng = GameRng.fromState(rngState);
-      tray = [for (final p in PieceGenerator(rng).nextTray(clear.board)) p.id];
+      tray = [
+        for (final p in PieceGenerator(
+          rng,
+        ).nextTray(clear.board, clearFocus: state.clearFocus))
+          p.id,
+      ];
       rngState = rng.state;
     }
 

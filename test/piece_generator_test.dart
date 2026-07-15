@@ -98,6 +98,61 @@ void main() {
     expect(breakerTrays / trials, greaterThan(0.9));
   });
 
+  test('clearFocus deals more clears than default on a primed board', () {
+    // Several rows one cell short: lots of breaks available.
+    final primed = boardFrom([
+      '........',
+      '........',
+      '.1111111',
+      '1111111.',
+      '.1111111',
+      '1111111.',
+      '.1111111',
+      '1111111.',
+    ]);
+    var focusClears = 0;
+    var defaultClears = 0;
+    const trials = 40;
+    for (var seed = 0; seed < trials; seed++) {
+      final f = PieceGenerator(
+        GameRng(seed),
+      ).nextTray(primed, clearFocus: true);
+      final d = PieceGenerator(GameRng(seed)).nextTray(primed);
+      focusClears += clearingPotential(primed, f);
+      defaultClears += clearingPotential(primed, d);
+    }
+    expect(
+      focusClears,
+      greaterThan(defaultClears),
+      reason: 'clear-focus should yield more clearing potential',
+    );
+  });
+
+  test('clearFocus favors big pieces on an empty board', () {
+    final empty = Board.empty();
+    var focusCells = 0;
+    var defaultCells = 0;
+    const trials = 40;
+    for (var seed = 0; seed < trials; seed++) {
+      for (final p in PieceGenerator(
+        GameRng(seed),
+      ).nextTray(empty, clearFocus: true)) {
+        focusCells += p.cells.length;
+      }
+      for (final p in PieceGenerator(GameRng(seed)).nextTray(empty)) {
+        defaultCells += p.cells.length;
+      }
+    }
+    expect(focusCells, greaterThan(defaultCells));
+  });
+
+  test('clearFocus stays deterministic per seed', () {
+    final board = Board.empty();
+    final a = PieceGenerator(GameRng(9)).nextTray(board, clearFocus: true);
+    final b = PieceGenerator(GameRng(9)).nextTray(board, clearFocus: true);
+    expect(a.map((p) => p.id).toList(), b.map((p) => p.id).toList());
+  });
+
   test('fresh trays are always placeable while any piece fits', () {
     // Only 'single' (rare, weight 0.25) fits this board, so unguarded
     // draws would routinely produce dead trays.
