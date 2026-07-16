@@ -16,12 +16,12 @@ void paintBlock(Canvas canvas, Rect rect, Color color, {double opacity = 1}) {
   final inset = rect.shortestSide * 0.015;
   final body = rect.deflate(inset);
   final side = body.shortestSide;
-  final outerR = Radius.circular(side * 0.22);
+  final outerR = Radius.circular(side * 0.10);
 
   Color withA(Color c) => c.withValues(alpha: c.a * opacity);
 
-  final light = Color.lerp(color, _white, 0.55)!;
-  final dark = Color.lerp(color, _black, 0.30)!;
+  final light = Color.lerp(color, _white, 0.42)!;
+  final dark = Color.lerp(color, _black, 0.34)!;
 
   // 1. Outer body: diagonal light→dark gives the directional 3D. The bevel
   //    border (revealed around the inner face below) reads as lit on the
@@ -39,13 +39,13 @@ void paintBlock(Canvas canvas, Rect rect, Color color, {double opacity = 1}) {
 
   // 2. Raised inner face: inset rounded rect, brighter at the top, that
   //    leaves the beveled border showing all around.
-  final bevel = side * 0.14;
+  final bevel = side * 0.13;
   final face = body.deflate(bevel);
   canvas.drawRRect(
-    RRect.fromRectAndRadius(face, Radius.circular(face.shortestSide * 0.2)),
+    RRect.fromRectAndRadius(face, Radius.circular(face.shortestSide * 0.08)),
     Paint()
       ..shader = Gradient.linear(face.topCenter, face.bottomCenter, [
-        withA(Color.lerp(color, _white, 0.32)!),
+        withA(Color.lerp(color, _white, 0.20)!),
         withA(color),
       ]),
   );
