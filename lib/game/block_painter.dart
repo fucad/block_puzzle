@@ -1,41 +1,65 @@
 import 'dart:math';
 import 'dart:ui';
 
-/// Draws one block cell in the shared beveled style: rounded fill with a
-/// lighter top edge and darker bottom edge, matching the chunky look of
-/// the reference skins. Used by the board, tray pieces, and ghosts.
+const _white = Color(0xFFFFFFFF);
+const _black = Color(0xFF000000);
+
+/// Draws one block cell in the glossy, puffy 3D style of the reference
+/// skins: cells sit nearly flush (only a hair of dark shows where corners
+/// meet), with a bright top-left, a shaded bottom-right, and a raised
+/// inner face. Kept GPU-cheap — two gradient round-rects plus a gloss, no
+/// per-cell path meshes — because the whole board repaints every frame.
+/// Used by the board, tray pieces, and ghosts.
 void paintBlock(Canvas canvas, Rect rect, Color color, {double opacity = 1}) {
-  final inset = rect.shortestSide * 0.045;
-  final r = Radius.circular(rect.shortestSide * 0.16);
+  // Near-flush: a sliver of inset so adjacent rounded corners leave the
+  // tidy little dark notches from the reference instead of a grid of gaps.
+  final inset = rect.shortestSide * 0.015;
   final body = rect.deflate(inset);
-  final rrect = RRect.fromRectAndRadius(body, r);
+  final side = body.shortestSide;
+  final outerR = Radius.circular(side * 0.22);
 
   Color withA(Color c) => c.withValues(alpha: c.a * opacity);
 
-  canvas.drawRRect(rrect, Paint()..color = withA(color));
+  final light = Color.lerp(color, _white, 0.55)!;
+  final dark = Color.lerp(color, _black, 0.30)!;
 
-  final bevel = body.height * 0.22;
-  final top = Path()
-    ..addRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(body.left, body.top, body.width, bevel),
-        r,
+  // 1. Outer body: diagonal light→dark gives the directional 3D. The bevel
+  //    border (revealed around the inner face below) reads as lit on the
+  //    top-left and shadowed on the bottom-right.
+  canvas.drawRRect(
+    RRect.fromRectAndRadius(body, outerR),
+    Paint()
+      ..shader = Gradient.linear(
+        body.topLeft,
+        body.bottomRight,
+        [withA(light), withA(color), withA(dark)],
+        const [0.0, 0.55, 1.0],
       ),
-    );
-  canvas.drawPath(
-    top,
-    Paint()..color = withA(Color.lerp(color, const Color(0xFFFFFFFF), .35)!),
   );
-  final bottom = Path()
-    ..addRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(body.left, body.bottom - bevel, body.width, bevel),
-        r,
-      ),
-    );
-  canvas.drawPath(
-    bottom,
-    Paint()..color = withA(Color.lerp(color, const Color(0xFF000000), .25)!),
+
+  // 2. Raised inner face: inset rounded rect, brighter at the top, that
+  //    leaves the beveled border showing all around.
+  final bevel = side * 0.14;
+  final face = body.deflate(bevel);
+  canvas.drawRRect(
+    RRect.fromRectAndRadius(face, Radius.circular(face.shortestSide * 0.2)),
+    Paint()
+      ..shader = Gradient.linear(face.topCenter, face.bottomCenter, [
+        withA(Color.lerp(color, _white, 0.32)!),
+        withA(color),
+      ]),
+  );
+
+  // 3. Gloss: a soft highlight blip in the top-left corner of the face.
+  final gloss = Rect.fromLTWH(
+    face.left + face.width * 0.10,
+    face.top + face.height * 0.10,
+    face.width * 0.42,
+    face.height * 0.26,
+  );
+  canvas.drawRRect(
+    RRect.fromRectAndRadius(gloss, Radius.circular(gloss.height)),
+    Paint()..color = _white.withValues(alpha: 0.22 * opacity),
   );
 }
 
