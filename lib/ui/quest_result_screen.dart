@@ -47,7 +47,7 @@ class QuestResultScreen extends ConsumerWidget {
                   ),
                   const Spacer(),
                   if (won) ...[
-                    _WinContent(praise: praise),
+                    _WinContent(praise: praise, levelNumber: run.levelNumber),
                   ] else ...[
                     const Text(
                       'So Close!',
@@ -137,23 +137,39 @@ class QuestResultScreen extends ConsumerWidget {
 // ── Win content ──────────────────────────────────────────────────────────────
 
 class _WinContent extends StatefulWidget {
-  const _WinContent({this.praise});
+  const _WinContent({this.praise, required this.levelNumber});
   final String? praise;
+  final int levelNumber;
 
   @override
   State<_WinContent> createState() => _WinContentState();
 }
 
 class _WinContentState extends State<_WinContent>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 900),
   )..forward();
 
+  // Level number bounces in after a short delay.
+  late final AnimationController _levelAnim = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 700),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 200), () {
+      if (mounted) _levelAnim.forward();
+    });
+  }
+
   @override
   void dispose() {
     _c.dispose();
+    _levelAnim.dispose();
     super.dispose();
   }
 
@@ -161,6 +177,10 @@ class _WinContentState extends State<_WinContent>
   Widget build(BuildContext context) {
     final bounce = CurvedAnimation(parent: _c, curve: Curves.elasticOut);
     final fade = CurvedAnimation(parent: _c, curve: Curves.easeIn);
+    final levelBounce = CurvedAnimation(
+      parent: _levelAnim,
+      curve: Curves.elasticOut,
+    );
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -170,15 +190,47 @@ class _WinContentState extends State<_WinContent>
           child: const Text('🏆', style: TextStyle(fontSize: 80)),
         ),
         const SizedBox(height: 16),
+        // "Level X" with animated number, then "Complete!" fades in below.
+        FadeTransition(
+          opacity: fade,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              const Text(
+                'Level ',
+                style: TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFFFFE082),
+                ),
+              ),
+              ScaleTransition(
+                scale: levelBounce,
+                child: Text(
+                  '${widget.levelNumber}',
+                  style: const TextStyle(
+                    fontSize: 52,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFFF2C94C),
+                    height: 1,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 2),
         FadeTransition(
           opacity: fade,
           child: const Text(
-            'Level Complete!',
+            'Complete!',
             style: TextStyle(
-              fontSize: 44,
+              fontSize: 36,
               fontWeight: FontWeight.w900,
               color: Color(0xFFFFE082),
-              shadows: [Shadow(color: Colors.black38, blurRadius: 12)],
+              letterSpacing: 1,
             ),
           ),
         ),
@@ -206,9 +258,9 @@ class _WinContentState extends State<_WinContent>
         const SizedBox(height: 24),
         FadeTransition(
           opacity: fade,
-          child: Row(
+          child: const Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
+            children: [
               Text('⭐', style: TextStyle(fontSize: 36)),
               SizedBox(width: 8),
               Text('⭐', style: TextStyle(fontSize: 44)),

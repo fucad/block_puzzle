@@ -17,10 +17,16 @@ class MainMenuScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.watch(themeProvider);
     final save = ref.watch(saveDataProvider);
-    final totalTreasures = save.questCompleted.values.fold(
-      0,
-      (sum, s) => sum + s.length,
-    );
+    final catalog = ref.watch(questCatalogProvider).value;
+    final totalTreasures = catalog == null
+        ? 0
+        : catalog.playable
+              .where(
+                (pack) =>
+                    (save.questCompleted[pack.id]?.length ?? 0) >=
+                    pack.stages.length,
+              )
+              .length;
 
     return Scaffold(
       body: DecoratedBox(
@@ -222,7 +228,6 @@ class _LetterBlock extends StatelessWidget {
           fontSize: 30,
           fontWeight: FontWeight.w900,
           color: Colors.white,
-          shadows: [Shadow(color: Colors.black26, blurRadius: 4)],
         ),
       ),
     );

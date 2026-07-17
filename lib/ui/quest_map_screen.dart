@@ -207,8 +207,11 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
                             child: Stack(
                               clipBehavior: Clip.none,
                               children: [
-                                // Decorative scenery in the background.
-                                _MapScenery(width: width, height: totalHeight),
+                                // Decorative scenery near specific nodes.
+                                _MapScenery(
+                                  width: width,
+                                  centers: centers,
+                                ),
                                 CustomPaint(
                                   size: Size(width, totalHeight),
                                   painter: _TrailPainter(
@@ -453,37 +456,70 @@ class _NodeTile extends StatelessWidget {
   }
 }
 
-/// Decorative scenery items scattered along the quest trail.
+/// Styled landmark icons placed near every other quest node.
+/// Fewer decorations, bigger icons, positioned relative to real node centers.
 class _MapScenery extends StatelessWidget {
-  const _MapScenery({required this.width, required this.height});
+  const _MapScenery({required this.width, required this.centers});
   final double width;
-  final double height;
+  final List<Offset> centers;
 
-  static const _items = [
-    // (leftFraction, topFraction, emoji, size)
-    (0.04, 0.10, '🌴', 32.0),
-    (0.80, 0.13, '⭐', 22.0),
-    (0.06, 0.28, '🪨', 24.0),
-    (0.78, 0.32, '🌺', 26.0),
-    (0.12, 0.50, '🗺️', 22.0),
-    (0.74, 0.52, '💰', 22.0),
-    (0.05, 0.68, '🌊', 26.0),
-    (0.76, 0.70, '🦜', 22.0),
-    (0.44, 0.38, '✨', 20.0),
-    (0.44, 0.62, '🔮', 20.0),
+  // One landmark definition per decoration slot: (icon, color, label).
+  static const _defs = [
+    (Icons.park_rounded, Color(0xFF6FCF97), 'grove'),
+    (Icons.monetization_on_rounded, Color(0xFFF2C94C), 'loot'),
+    (Icons.water_rounded, Color(0xFF56CCF2), 'lagoon'),
+    (Icons.diamond_rounded, Color(0xFFBB6BFF), 'crystal'),
+    (Icons.local_florist_rounded, Color(0xFFFF52AE), 'flower'),
+    (Icons.landscape_rounded, Color(0xFF8BA4CC), 'cliffs'),
+    (Icons.auto_awesome_rounded, Color(0xFFFFF176), 'magic'),
+    (Icons.anchor_rounded, Color(0xFF3FD9F5), 'cove'),
+    (Icons.map_rounded, Color(0xFFFF8A00), 'map'),
+    (Icons.brightness_3_rounded, Color(0xFFA0C4FF), 'night'),
   ];
 
   @override
   Widget build(BuildContext context) {
+    if (centers.isEmpty) return const SizedBox.shrink();
+
+    // Pick odd-indexed nodes (1, 3, 5 …) up to the number of defs.
+    final slots = <(Offset, int)>[];
+    for (var i = 1; i < centers.length && slots.length < _defs.length; i += 2) {
+      slots.add((centers[i], slots.length));
+    }
+
     return Stack(
       children: [
-        for (final (lf, tf, emoji, size) in _items)
+        for (final (center, di) in slots)
           Positioned(
-            left: width * lf,
-            top: height * tf,
-            child: Text(emoji, style: TextStyle(fontSize: size)),
+            // Alternate left/right of the node with a generous gap.
+            left: di.isEven ? center.dx - 86 : center.dx + 38,
+            top: center.dy - 20,
+            child: _LandmarkIcon(
+              icon: _defs[di].$1,
+              color: _defs[di].$2,
+            ),
           ),
       ],
+    );
+  }
+}
+
+class _LandmarkIcon extends StatelessWidget {
+  const _LandmarkIcon({required this.icon, required this.color});
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 42,
+      height: 42,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        shape: BoxShape.circle,
+        border: Border.all(color: color.withValues(alpha: 0.35), width: 1.5),
+      ),
+      child: Icon(icon, color: color.withValues(alpha: 0.80), size: 22),
     );
   }
 }
