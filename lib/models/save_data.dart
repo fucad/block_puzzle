@@ -39,6 +39,9 @@ class SaveData {
     this.settings = const Settings(),
     this.classicHighScore = 0,
     this.allTimeBestCombo = 0,
+    this.bestAllClearsInRun = 0,
+    this.totalBlocksPlaced = 0,
+    this.totalCombos = 0,
     this.classicRun,
     this.classicRunSeed,
     this.questRun,
@@ -54,6 +57,16 @@ class SaveData {
   final Settings settings;
   final int classicHighScore;
   final int allTimeBestCombo;
+
+  /// Most all-clears achieved in a single game (classic or quest).
+  final int bestAllClearsInRun;
+
+  /// Lifetime total of cells placed (every tray piece placed, every mode).
+  final int totalBlocksPlaced;
+
+  /// Lifetime total of combo-clearing placements (combo counter > 0 each
+  /// time it increments, i.e. the consecutive-clears streak continues).
+  final int totalCombos;
 
   /// In-progress classic run to resume after app kill; null when none.
   final GameState? classicRun;
@@ -79,6 +92,9 @@ class SaveData {
     Settings? settings,
     int? classicHighScore,
     int? allTimeBestCombo,
+    int? bestAllClearsInRun,
+    int? totalBlocksPlaced,
+    int? totalCombos,
     GameState? classicRun,
     bool clearClassicRun = false,
     int? classicRunSeed,
@@ -94,6 +110,9 @@ class SaveData {
       settings: settings ?? this.settings,
       classicHighScore: classicHighScore ?? this.classicHighScore,
       allTimeBestCombo: allTimeBestCombo ?? this.allTimeBestCombo,
+      bestAllClearsInRun: bestAllClearsInRun ?? this.bestAllClearsInRun,
+      totalBlocksPlaced: totalBlocksPlaced ?? this.totalBlocksPlaced,
+      totalCombos: totalCombos ?? this.totalCombos,
       classicRun: clearClassicRun ? null : (classicRun ?? this.classicRun),
       classicRunSeed: clearClassicRun
           ? null
@@ -119,6 +138,9 @@ class SaveData {
     'settings': settings.toJson(),
     'classicHighScore': classicHighScore,
     'allTimeBestCombo': allTimeBestCombo,
+    'bestAllClearsInRun': bestAllClearsInRun,
+    'totalBlocksPlaced': totalBlocksPlaced,
+    'totalCombos': totalCombos,
     'classicRun': classicRun?.toJson(),
     'classicRunSeed': classicRunSeed?.toString(),
     if (questRun != null) ...{
@@ -149,6 +171,9 @@ class SaveData {
       ),
       classicHighScore: json['classicHighScore'] as int? ?? 0,
       allTimeBestCombo: json['allTimeBestCombo'] as int? ?? 0,
+      bestAllClearsInRun: json['bestAllClearsInRun'] as int? ?? 0,
+      totalBlocksPlaced: json['totalBlocksPlaced'] as int? ?? 0,
+      totalCombos: json['totalCombos'] as int? ?? 0,
       classicRun: run == null
           ? null
           : GameState.fromJson(run.cast<String, Object?>()),

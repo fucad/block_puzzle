@@ -23,11 +23,11 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
   final _scroll = ScrollController();
   bool _jumped = false;
 
-  static const _perRow = 4;
-  static const _rowHeight = 96.0;
-  static const _chestArea = 170.0;
+  static const _perRow = 3;
+  static const _rowHeight = 130.0;
+  static const _chestArea = 200.0;
   static const _bottomPad = 28.0;
-  static const _colFractions = [0.15, 0.38, 0.62, 0.85];
+  static const _colFractions = [0.18, 0.50, 0.82];
 
   // Advance-to-next-stage animation: the trail fills from the just-cleared
   // node to the new current one, which then lights up.
@@ -207,6 +207,8 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
                             child: Stack(
                               clipBehavior: Clip.none,
                               children: [
+                                // Decorative scenery in the background.
+                                _MapScenery(width: width, height: totalHeight),
                                 CustomPaint(
                                   size: Size(width, totalHeight),
                                   painter: _TrailPainter(
@@ -451,22 +453,84 @@ class _NodeTile extends StatelessWidget {
   }
 }
 
+/// Decorative scenery items scattered along the quest trail.
+class _MapScenery extends StatelessWidget {
+  const _MapScenery({required this.width, required this.height});
+  final double width;
+  final double height;
+
+  static const _items = [
+    // (leftFraction, topFraction, emoji, size)
+    (0.04, 0.10, '🌴', 32.0),
+    (0.80, 0.13, '⭐', 22.0),
+    (0.06, 0.28, '🪨', 24.0),
+    (0.78, 0.32, '🌺', 26.0),
+    (0.12, 0.50, '🗺️', 22.0),
+    (0.74, 0.52, '💰', 22.0),
+    (0.05, 0.68, '🌊', 26.0),
+    (0.76, 0.70, '🦜', 22.0),
+    (0.44, 0.38, '✨', 20.0),
+    (0.44, 0.62, '🔮', 20.0),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        for (final (lf, tf, emoji, size) in _items)
+          Positioned(
+            left: width * lf,
+            top: height * tf,
+            child: Text(emoji, style: TextStyle(fontSize: size)),
+          ),
+      ],
+    );
+  }
+}
+
 /// The prize at the end of the trail. Achievement only — it never grants
 /// anything, so it never needs to sell anything.
-class _TreasureChest extends StatelessWidget {
+class _TreasureChest extends StatefulWidget {
   const _TreasureChest({required this.open, required this.onTap});
 
   final bool open;
   final VoidCallback onTap;
 
   @override
+  State<_TreasureChest> createState() => _TreasureChestState();
+}
+
+class _TreasureChestState extends State<_TreasureChest>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _bob = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1600),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _bob.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
-      child: SizedBox(
-        width: 88,
-        height: 88,
-        child: CustomPaint(painter: _ChestPainter(open: open)),
+      onTap: widget.onTap,
+      child: AnimatedBuilder(
+        animation: _bob,
+        builder: (_, child) => Transform.translate(
+          offset: Offset(0, -_bob.value * (widget.open ? 5 : 2)),
+          child: Transform.scale(
+            scale: widget.open ? 1.0 + _bob.value * 0.05 : 1.0,
+            child: child,
+          ),
+        ),
+        child: SizedBox(
+          width: 88,
+          height: 88,
+          child: CustomPaint(painter: _ChestPainter(open: widget.open)),
+        ),
       ),
     );
   }

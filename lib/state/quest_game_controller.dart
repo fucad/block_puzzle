@@ -136,6 +136,7 @@ class QuestGameController extends Notifier<QuestRun?> {
       status = QuestStatus.won;
       save
         ..markStageCompleted(run.pack.id, run.stage.id)
+        ..recordQuestWin(allClears: outcome.state.allClears)
         ..clearQuestRun();
     } else if (GameEngine.isGameOver(outcome.state)) {
       status = QuestStatus.lost;
@@ -148,6 +149,10 @@ class QuestGameController extends Notifier<QuestRun?> {
         levelNumber: run.levelNumber,
       );
     }
+    save.recordPlacement(
+      cellsPlaced: outcome.events.cellsPlaced,
+      comboIncreased: outcome.state.combo > 0,
+    );
     state = run.copyWith(game: outcome.state, status: status);
     return outcome;
   }
