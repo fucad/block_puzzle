@@ -65,9 +65,8 @@ void main() {
 
     expect(find.byType(RunSummaryScreen), findsOneWidget);
     expect(find.text('778'), findsOneWidget); // 777 + 1 cell
-    // Fresh save: round best 5 became the all-time best too, so the text
-    // appears in both stats.
-    expect(find.text('Combo 5'), findsNWidgets(2));
+    // Best combo chip shows the round-best value with × prefix.
+    expect(find.text('×5'), findsOneWidget);
 
     // Play again: back to the classic screen with a fresh run.
     await tester.tap(find.byIcon(Icons.play_arrow_rounded));

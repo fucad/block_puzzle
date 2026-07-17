@@ -456,70 +456,109 @@ class _NodeTile extends StatelessWidget {
   }
 }
 
-/// Styled landmark icons placed near every other quest node.
-/// Fewer decorations, bigger icons, positioned relative to real node centers.
+/// Mini game-piece blocks placed beside every 10th quest node (max 3 total).
+/// Uses actual tetromino shapes to keep the block-game theme.
 class _MapScenery extends StatelessWidget {
   const _MapScenery({required this.width, required this.centers});
   final double width;
   final List<Offset> centers;
 
-  // One landmark definition per decoration slot: (icon, color, label).
-  static const _defs = [
-    (Icons.park_rounded, Color(0xFF6FCF97), 'grove'),
-    (Icons.monetization_on_rounded, Color(0xFFF2C94C), 'loot'),
-    (Icons.water_rounded, Color(0xFF56CCF2), 'lagoon'),
-    (Icons.diamond_rounded, Color(0xFFBB6BFF), 'crystal'),
-    (Icons.local_florist_rounded, Color(0xFFFF52AE), 'flower'),
-    (Icons.landscape_rounded, Color(0xFF8BA4CC), 'cliffs'),
-    (Icons.auto_awesome_rounded, Color(0xFFFFF176), 'magic'),
-    (Icons.anchor_rounded, Color(0xFF3FD9F5), 'cove'),
-    (Icons.map_rounded, Color(0xFFFF8A00), 'map'),
-    (Icons.brightness_3_rounded, Color(0xFFA0C4FF), 'night'),
+  // Three tetromino shapes with game palette colors.
+  static final List<List<List<Color?>>> _pieces = [
+    // L-piece: orange
+    [
+      [const Color(0xFFFF8A00), null],
+      [const Color(0xFFFF8A00), null],
+      [const Color(0xFFFF8A00), const Color(0xFFFF8A00)],
+    ],
+    // S-piece: blue
+    [
+      [null, const Color(0xFF2B82FF), const Color(0xFF2B82FF)],
+      [const Color(0xFF2B82FF), const Color(0xFF2B82FF), null],
+    ],
+    // T-piece: purple
+    [
+      [const Color(0xFFA43BFF), const Color(0xFFA43BFF), const Color(0xFFA43BFF)],
+      [null, const Color(0xFFA43BFF), null],
+    ],
   ];
 
   @override
   Widget build(BuildContext context) {
     if (centers.isEmpty) return const SizedBox.shrink();
 
-    // Pick odd-indexed nodes (1, 3, 5 …) up to the number of defs.
-    final slots = <(Offset, int)>[];
-    for (var i = 1; i < centers.length && slots.length < _defs.length; i += 2) {
-      slots.add((centers[i], slots.length));
+    // Place one decoration per 10 nodes, up to 3 total.
+    final placements = <(int nodeIdx, int pieceIdx)>[];
+    for (var i = 9; i < centers.length && placements.length < _pieces.length; i += 10) {
+      placements.add((i, placements.length));
     }
 
     return Stack(
       children: [
-        for (final (center, di) in slots)
-          Positioned(
-            // Alternate left/right of the node with a generous gap.
-            left: di.isEven ? center.dx - 86 : center.dx + 38,
-            top: center.dy - 20,
-            child: _LandmarkIcon(
-              icon: _defs[di].$1,
-              color: _defs[di].$2,
-            ),
-          ),
+        for (final (nodeIdx, pieceIdx) in placements)
+          _buildPiece(nodeIdx, pieceIdx),
       ],
+    );
+  }
+
+  Widget _buildPiece(int nodeIdx, int pieceIdx) {
+    final center = centers[nodeIdx];
+    final piece = _pieces[pieceIdx];
+    final colCount = piece.fold(0, (m, r) => r.length > m ? r.length : m);
+    final pieceW = colCount * 22.0; // 18px block + 4px margin
+
+    // Alternate left / right, clamped inside screen bounds.
+    final double left;
+    if (pieceIdx.isEven) {
+      left = (center.dx - 46 - pieceW).clamp(4.0, (width - pieceW - 4.0));
+    } else {
+      left = (center.dx + 42).clamp(4.0, (width - pieceW - 4.0));
+    }
+
+    return Positioned(
+      left: left,
+      top: center.dy - piece.length * 11.0,
+      child: Opacity(opacity: 0.7, child: _BlockPiece(grid: piece)),
     );
   }
 }
 
-class _LandmarkIcon extends StatelessWidget {
-  const _LandmarkIcon({required this.icon, required this.color});
-  final IconData icon;
-  final Color color;
+/// Renders a 2-D grid as colored game blocks (tetromino cell style).
+class _BlockPiece extends StatelessWidget {
+  const _BlockPiece({required this.grid});
+  final List<List<Color?>> grid;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 42,
-      height: 42,
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        shape: BoxShape.circle,
-        border: Border.all(color: color.withValues(alpha: 0.35), width: 1.5),
-      ),
-      child: Icon(icon, color: color.withValues(alpha: 0.80), size: 22),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final row in grid)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final color in row)
+                Container(
+                  width: 18,
+                  height: 18,
+                  margin: const EdgeInsets.all(2),
+                  decoration: color == null
+                      ? null
+                      : BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(4),
+                          boxShadow: [
+                            BoxShadow(
+                              color: color.withValues(alpha: 0.5),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                ),
+            ],
+          ),
+      ],
     );
   }
 }

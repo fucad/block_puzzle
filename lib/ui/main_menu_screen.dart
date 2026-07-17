@@ -98,7 +98,8 @@ class MainMenuScreen extends ConsumerWidget {
                               ),
                             )
                           : null,
-                      badge: _questCountdown(ref),
+                      badge: _questBadge(ref, totalTreasures),
+                      goldBadge: _questAllDone(ref, totalTreasures),
                     ),
                     const SizedBox(height: 16),
                     _MenuButton(
@@ -121,19 +122,14 @@ class MainMenuScreen extends ConsumerWidget {
 
                     // Feedback button at the bottom.
                     TextButton.icon(
-                      onPressed: () => launchUrl(
-                        Uri.parse(
-                          'https://github.com/fucad/block_puzzle/issues/new',
-                        ),
-                        mode: LaunchMode.externalApplication,
-                      ),
+                      onPressed: () => _showFeedbackSheet(context),
                       icon: const Icon(
-                        Icons.bug_report_rounded,
+                        Icons.feedback_rounded,
                         size: 18,
                         color: Colors.white38,
                       ),
                       label: const Text(
-                        'Report a bug',
+                        'Share Feedback',
                         style: TextStyle(color: Colors.white38, fontSize: 13),
                       ),
                     ),
@@ -155,6 +151,111 @@ String? _questCountdown(WidgetRef ref) {
   final left = next.difference(DateTime.now().toUtc());
   if (left.isNegative) return null;
   return '${left.inDays}d ${left.inHours % 24}h';
+}
+
+bool _questAllDone(WidgetRef ref, int totalTreasures) {
+  final catalog = ref.watch(questCatalogProvider).value;
+  return catalog != null &&
+      catalog.playable.isNotEmpty &&
+      totalTreasures >= catalog.playable.length;
+}
+
+String? _questBadge(WidgetRef ref, int totalTreasures) {
+  if (_questAllDone(ref, totalTreasures)) return '★ All Done';
+  return _questCountdown(ref);
+}
+
+void _showFeedbackSheet(BuildContext context) {
+  showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: const Color(0xFF1A2540),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (ctx) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 8),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.white24,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Share Feedback',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ListTile(
+            leading: const Icon(
+              Icons.bug_report_rounded,
+              color: Color(0xFF56CCF2),
+            ),
+            title: const Text(
+              'GitHub Issues',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            subtitle: const Text(
+              'Report bugs or feature requests',
+              style: TextStyle(color: Colors.white54),
+            ),
+            onTap: () {
+              Navigator.pop(ctx);
+              launchUrl(
+                Uri.parse(
+                  'https://github.com/fucad/block_puzzle/issues/new',
+                ),
+                mode: LaunchMode.externalApplication,
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(
+              Icons.email_rounded,
+              color: Color(0xFFF2C94C),
+            ),
+            title: const Text(
+              'Send Email',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            subtitle: const Text(
+              'dal001.dev@gmail.com',
+              style: TextStyle(color: Colors.white54),
+            ),
+            onTap: () {
+              Navigator.pop(ctx);
+              launchUrl(
+                Uri(
+                  scheme: 'mailto',
+                  path: 'dal001.dev@gmail.com',
+                  queryParameters: {
+                    'subject': '[Block Puzzle] Feedback',
+                  },
+                ),
+                mode: LaunchMode.externalApplication,
+              );
+            },
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    ),
+  );
 }
 
 // ── Logo ─────────────────────────────────────────────────────────────────────
@@ -325,6 +426,7 @@ class _MenuButton extends StatelessWidget {
     required this.color,
     required this.onPressed,
     this.badge,
+    this.goldBadge = false,
   });
 
   final String label;
@@ -332,6 +434,7 @@ class _MenuButton extends StatelessWidget {
   final Color color;
   final VoidCallback? onPressed;
   final String? badge;
+  final bool goldBadge;
 
   @override
   Widget build(BuildContext context) {
@@ -380,13 +483,15 @@ class _MenuButton extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: const Color(0xFFE53935),
+              color: goldBadge
+                  ? const Color(0xFFF2C94C)
+                  : const Color(0xFFE53935),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
               badge!,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: goldBadge ? const Color(0xFF7A2E12) : Colors.white,
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
               ),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/quest.dart';
+import '../state/providers.dart';
 import '../state/quest_game_controller.dart';
 import '../state/quest_providers.dart';
 import 'quest_screen.dart';
@@ -20,6 +21,12 @@ class QuestResultScreen extends ConsumerWidget {
     if (run == null) return const SizedBox.shrink();
     final won = run.status == QuestStatus.won;
 
+    // Detect pack completion — all stages in this pack are now done.
+    final save = ref.watch(saveDataProvider);
+    final isPackComplete = won &&
+        (save.questCompleted[run.pack.id]?.length ?? 0) >=
+            run.pack.stages.length;
+
     return Scaffold(
       body: DecoratedBox(
         decoration: BoxDecoration(
@@ -35,6 +42,7 @@ class QuestResultScreen extends ConsumerWidget {
           child: Stack(
             children: [
               if (won) const _ConfettiLayer(),
+              if (isPackComplete) const _BlockBurstLayer(),
               Column(
                 children: [
                   Align(
@@ -422,4 +430,103 @@ class _ProgressRecap extends StatelessWidget {
       ],
     );
   }
+}
+
+// ── Block burst (pack complete) ───────────────────────────────────────────────
+
+class _BlockBurstLayer extends StatefulWidget {
+  const _BlockBurstLayer();
+
+  @override
+  State<_BlockBurstLayer> createState() => _BlockBurstLayerState();
+}
+
+class _BlockBurstLayerState extends State<_BlockBurstLayer>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1800),
+  )..forward();
+
+  static final _rng = Random(13);
+  static final _blocks = List.generate(28, (_) {
+    final angle = _rng.nextDouble() * pi * 2;
+    return _BurstBlock(
+      angle: angle,
+      speed: 0.4 + _rng.nextDouble() * 0.6,
+      size: 10.0 + _rng.nextDouble() * 10,
+      color: [
+        const Color(0xFFFF2E2E),
+        const Color(0xFF2FD048),
+        const Color(0xFFFF8A00),
+        const Color(0xFFFFCE00),
+        const Color(0xFF2B82FF),
+        const Color(0xFFA43BFF),
+        const Color(0xFF12CFEF),
+        const Color(0xFFFF52AE),
+      ][_rng.nextInt(8)],
+      delay: _rng.nextDouble() * 0.15,
+    );
+  });
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (_, _) => CustomPaint(
+        size: size,
+        painter: _BlockBurstPainter(blocks: _blocks, t: _c.value),
+      ),
+    );
+  }
+}
+
+class _BurstBlock {
+  const _BurstBlock({
+    required this.angle,
+    required this.speed,
+    required this.size,
+    required this.color,
+    required this.delay,
+  });
+  final double angle, speed, size, delay;
+  final Color color;
+}
+
+class _BlockBurstPainter extends CustomPainter {
+  const _BlockBurstPainter({required this.blocks, required this.t});
+  final List<_BurstBlock> blocks;
+  final double t;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cx = size.width / 2;
+    final cy = size.height * 0.38;
+    for (final b in blocks) {
+      final progress = ((t - b.delay) / (1 - b.delay)).clamp(0.0, 1.0);
+      if (progress <= 0) continue;
+      final dist = progress * b.speed * size.shortestSide * 0.55;
+      final px = cx + cos(b.angle) * dist;
+      final py = cy + sin(b.angle) * dist + progress * progress * 90;
+      canvas.save();
+      canvas.translate(px, py);
+      canvas.rotate(progress * 3.5 * (b.angle > pi ? -1 : 1));
+      canvas.drawRect(
+        Rect.fromCenter(center: Offset.zero, width: b.size, height: b.size),
+        Paint()
+          ..color = b.color.withValues(alpha: (1 - progress * 0.75).clamp(0, 1)),
+      );
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(_BlockBurstPainter old) => old.t != t;
 }

@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../state/providers.dart';
 import '../state/quest_providers.dart';
 
-/// "Your Journey" — personal stats and trophy page.
 class PersonalScreen extends ConsumerWidget {
   const PersonalScreen({super.key});
 
@@ -76,14 +75,12 @@ class PersonalScreen extends ConsumerWidget {
                       const SizedBox(height: 10),
                       _StatRow(items: [
                         _StatData(
-                          icon: Icons.emoji_events_rounded,
-                          iconColor: const Color(0xFFFFD700),
+                          pixels: _Icons.highScore,
                           label: 'High Score',
                           value: _fmt(save.classicHighScore),
                         ),
                         _StatData(
-                          icon: Icons.whatshot_rounded,
-                          iconColor: const Color(0xFFFF6B35),
+                          pixels: _Icons.combo,
                           label: 'Best Combo',
                           value: '×${save.allTimeBestCombo}',
                         ),
@@ -91,14 +88,12 @@ class PersonalScreen extends ConsumerWidget {
                       const SizedBox(height: 10),
                       _StatRow(items: [
                         _StatData(
-                          icon: Icons.clear_all_rounded,
-                          iconColor: const Color(0xFF56CCF2),
+                          pixels: _Icons.allClear,
                           label: 'Best All-Clears',
                           value: '${save.bestAllClearsInRun}',
                         ),
                         _StatData(
-                          icon: Icons.map_rounded,
-                          iconColor: const Color(0xFF6FCF97),
+                          pixels: _Icons.levels,
                           label: 'Levels Beaten',
                           value: '$levelsBeaten',
                         ),
@@ -108,14 +103,12 @@ class PersonalScreen extends ConsumerWidget {
                       const SizedBox(height: 10),
                       _StatRow(items: [
                         _StatData(
-                          icon: Icons.grid_on_rounded,
-                          iconColor: const Color(0xFFBB6BFF),
+                          pixels: _Icons.blocks,
                           label: 'Blocks Placed',
                           value: _fmt(save.totalBlocksPlaced),
                         ),
                         _StatData(
-                          icon: Icons.local_fire_department_rounded,
-                          iconColor: const Color(0xFFFF8A00),
+                          pixels: _Icons.combosTotal,
                           label: 'Combos Done',
                           value: _fmt(save.totalCombos),
                         ),
@@ -123,14 +116,12 @@ class PersonalScreen extends ConsumerWidget {
                       const SizedBox(height: 10),
                       _StatRow(items: [
                         _StatData(
-                          icon: Icons.star_rounded,
-                          iconColor: const Color(0xFFF2C94C),
+                          pixels: _Icons.questStages,
                           label: 'Quest Stages',
                           value: '$levelsBeaten',
                         ),
                         _StatData(
-                          icon: Icons.inventory_2_rounded,
-                          iconColor: const Color(0xFF3FD9F5),
+                          pixels: _Icons.packs,
                           label: 'Packs Played',
                           value: '${save.questCompleted.length}',
                         ),
@@ -170,7 +161,153 @@ class PersonalScreen extends ConsumerWidget {
   }
 }
 
+// ── Pixel art icons (game-piece shapes in stat colors) ────────────────────────
+
+abstract final class _Icons {
+  static const Color? _ = null;
+
+  // L-piece gold → high score
+  static const List<List<Color?>> highScore = [
+    [Color(0xFFF2C94C), _, _, _],
+    [Color(0xFFF2C94C), _, _, _],
+    [Color(0xFFF2C94C), Color(0xFFF2C94C), _, _],
+    [_, _, _, _],
+  ];
+
+  // T-piece orange → combo
+  static const List<List<Color?>> combo = [
+    [Color(0xFFFF8A00), Color(0xFFFF8A00), Color(0xFFFF8A00), _],
+    [_, Color(0xFFFF8A00), _, _],
+    [_, _, _, _],
+    [_, _, _, _],
+  ];
+
+  // S-piece cyan → all-clear
+  static const List<List<Color?>> allClear = [
+    [_, Color(0xFF56CCF2), Color(0xFF56CCF2), _],
+    [Color(0xFF56CCF2), Color(0xFF56CCF2), _, _],
+    [_, _, _, _],
+    [_, _, _, _],
+  ];
+
+  // I-piece green (horizontal) → levels
+  static const List<List<Color?>> levels = [
+    [_, _, _, _],
+    [Color(0xFF6FCF97), Color(0xFF6FCF97), Color(0xFF6FCF97), Color(0xFF6FCF97)],
+    [_, _, _, _],
+    [_, _, _, _],
+  ];
+
+  // O-piece purple → blocks placed
+  static const List<List<Color?>> blocks = [
+    [_, _, _, _],
+    [_, Color(0xFFA43BFF), Color(0xFFA43BFF), _],
+    [_, Color(0xFFA43BFF), Color(0xFFA43BFF), _],
+    [_, _, _, _],
+  ];
+
+  // Z-piece red → combos total
+  static const List<List<Color?>> combosTotal = [
+    [Color(0xFFEB5757), Color(0xFFEB5757), _, _],
+    [_, Color(0xFFEB5757), Color(0xFFEB5757), _],
+    [_, _, _, _],
+    [_, _, _, _],
+  ];
+
+  // J-piece yellow → quest stages
+  static const List<List<Color?>> questStages = [
+    [_, _, Color(0xFFFFCE00), _],
+    [_, _, Color(0xFFFFCE00), _],
+    [_, Color(0xFFFFCE00), Color(0xFFFFCE00), _],
+    [_, _, _, _],
+  ];
+
+  // I-piece blue (vertical) → packs
+  static const List<List<Color?>> packs = [
+    [_, _, Color(0xFF2B82FF), _],
+    [_, _, Color(0xFF2B82FF), _],
+    [_, _, Color(0xFF2B82FF), _],
+    [_, _, Color(0xFF2B82FF), _],
+  ];
+}
+
+// Renders a 2-D grid of colored block-pixels.
+class _PixelArt extends StatelessWidget {
+  const _PixelArt({required this.pixels, this.px = 8.0});
+  final List<List<Color?>> pixels;
+  final double px;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final row in pixels)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final color in row)
+                SizedBox(
+                  width: px,
+                  height: px,
+                  child: color == null
+                      ? null
+                      : Container(
+                          margin: EdgeInsets.all(px * 0.1),
+                          decoration: BoxDecoration(
+                            color: color,
+                            borderRadius: BorderRadius.circular(px * 0.22),
+                          ),
+                        ),
+            ),
+            ],
+          ),
+      ],
+    );
+  }
+}
+
 // ── Treasure hero ─────────────────────────────────────────────────────────────
+
+// Block-drawn treasure chest (6×5 pixel grid).
+class _BlockChest extends StatelessWidget {
+  const _BlockChest({this.size = 60.0});
+  final double size;
+
+  static const List<List<Color>> _pixels = [
+    [Color(0xFFF2C94C), Color(0xFFF2C94C), Color(0xFFF2C94C), Color(0xFFF2C94C), Color(0xFFF2C94C), Color(0xFFF2C94C)],
+    [Color(0xFFFFE082), Color(0xFFFFE082), Color(0xFFFFE082), Color(0xFFFFE082), Color(0xFFFFE082), Color(0xFFFFE082)],
+    [Color(0xFF8B5A2B), Color(0xFF8B5A2B), Color(0xFFF2C94C), Color(0xFFF2C94C), Color(0xFF8B5A2B), Color(0xFF8B5A2B)],
+    [Color(0xFF8B5A2B), Color(0xFF8B5A2B), Color(0xFFF2C94C), Color(0xFFF2C94C), Color(0xFF8B5A2B), Color(0xFF8B5A2B)],
+    [Color(0xFF5C3A1A), Color(0xFF5C3A1A), Color(0xFF5C3A1A), Color(0xFF5C3A1A), Color(0xFF5C3A1A), Color(0xFF5C3A1A)],
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final px = size / 6;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final row in _pixels)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final color in row)
+                Container(
+                  width: px,
+                  height: px,
+                  margin: EdgeInsets.all(px * 0.06),
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(px * 0.2),
+                  ),
+                ),
+            ],
+          ),
+      ],
+    );
+  }
+}
 
 class _TreasureHero extends StatefulWidget {
   const _TreasureHero({required this.count});
@@ -207,10 +344,10 @@ class _TreasureHeroState extends State<_TreasureHero>
           AnimatedBuilder(
             animation: _pulse,
             builder: (_, child) => Transform.scale(
-              scale: 1.0 + _pulse.value * 0.08,
+              scale: 1.0 + _pulse.value * 0.07,
               child: child,
             ),
-            child: const Text('🏴‍☠️', style: TextStyle(fontSize: 56)),
+            child: const _BlockChest(size: 64),
           ),
           const SizedBox(width: 20),
           Expanded(
@@ -238,10 +375,7 @@ class _TreasureHeroState extends State<_TreasureHero>
                 const SizedBox(height: 4),
                 const Text(
                   'Complete a full pack to earn one',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Color(0x88F2C94C),
-                  ),
+                  style: TextStyle(fontSize: 11, color: Color(0x88F2C94C)),
                 ),
               ],
             ),
@@ -252,17 +386,15 @@ class _TreasureHeroState extends State<_TreasureHero>
   }
 }
 
-// ── Stat row ──────────────────────────────────────────────────────────────────
+// ── Stat row / card ───────────────────────────────────────────────────────────
 
 class _StatData {
   const _StatData({
-    required this.icon,
-    required this.iconColor,
+    required this.pixels,
     required this.label,
     required this.value,
   });
-  final IconData icon;
-  final Color iconColor;
+  final List<List<Color?>> pixels;
   final String label;
   final String value;
 }
@@ -300,14 +432,16 @@ class _StatCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Block-pixel icon in a tinted square container.
           Container(
-            width: 34,
-            height: 34,
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: data.iconColor.withValues(alpha: 0.15),
+              color: const Color(0x14FFFFFF),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(data.icon, color: data.iconColor, size: 20),
+            child: _PixelArt(pixels: data.pixels, px: 8),
           ),
           const SizedBox(height: 10),
           Text(
@@ -355,11 +489,7 @@ class _EthicsNote extends StatelessWidget {
           Expanded(
             child: Text(
               'Free forever. No ads. Open source.\nYour stats stay on your device only.',
-              style: TextStyle(
-                color: Colors.white38,
-                fontSize: 12,
-                height: 1.4,
-              ),
+              style: TextStyle(color: Colors.white38, fontSize: 12, height: 1.4),
             ),
           ),
         ],
