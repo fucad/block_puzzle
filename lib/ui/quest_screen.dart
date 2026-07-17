@@ -13,9 +13,6 @@ import '../state/quest_game_controller.dart';
 import 'quest_result_screen.dart';
 import 'settings_sheet.dart';
 
-/// One quest stage: goal HUD (score pill or gem counters), the play area,
-/// the 80% encouragement banner, and navigation to win/lose screens.
-/// Expects the controller's run to be started before this screen mounts.
 class QuestScreen extends ConsumerStatefulWidget {
   const QuestScreen({super.key});
 
@@ -23,22 +20,28 @@ class QuestScreen extends ConsumerStatefulWidget {
   ConsumerState<QuestScreen> createState() => _QuestScreenState();
 }
 
-class _QuestScreenState extends ConsumerState<QuestScreen> {
+class _QuestScreenState extends ConsumerState<QuestScreen>
+    with SingleTickerProviderStateMixin {
   late final BlockPuzzleGame _game;
   bool _resultShown = false;
 
-  /// Encouragement banners at rising goal-progress milestones.
   static const _bannerThresholds = [0.3, 0.5, 0.8];
   final _shownBanners = <double>{};
   String? _bannerText;
   bool _bannerVisible = false;
 
-  // Centered goal banner shown at stage start.
   bool _goalVisible = false;
+
+  // Controller for milestone banner bounce.
+  late final AnimationController _bannerAnim = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 400),
+  );
 
   void _showGoalBanner() {
     setState(() => _goalVisible = true);
-    Timer(const Duration(milliseconds: 2000), () {
+    // Quicker dismissal: 1.1 s visible, 300 ms fade.
+    Timer(const Duration(milliseconds: 1100), () {
       if (mounted) setState(() => _goalVisible = false);
     });
   }
@@ -65,23 +68,29 @@ class _QuestScreenState extends ConsumerState<QuestScreen> {
     );
   }
 
+  @override
+  void dispose() {
+    _bannerAnim.dispose();
+    super.dispose();
+  }
+
   void _onRunChanged(QuestRun? run) {
     if (run == null) return;
     _game.syncState(run.game);
 
     if (run.status == QuestStatus.playing) {
-      // Show only the highest newly crossed milestone (a big jump
-      // shouldn't queue three banners).
       final crossed = _bannerThresholds
           .where((t) => run.progress >= t && !_shownBanners.contains(t))
           .toList();
       if (crossed.isNotEmpty) {
         _shownBanners.addAll(crossed);
+        final pct = (crossed.last * 100).round();
         setState(() {
-          _bannerText = '${(crossed.last * 100).round()}% Done!';
+          _bannerText = pct == 80 ? '🔥 $pct% Almost there!' : '⭐ $pct% Done!';
           _bannerVisible = true;
         });
-        Timer(const Duration(milliseconds: 1800), () {
+        _bannerAnim.forward(from: 0);
+        Timer(const Duration(milliseconds: 1000), () {
           if (mounted) setState(() => _bannerVisible = false);
         });
       }
@@ -96,7 +105,6 @@ class _QuestScreenState extends ConsumerState<QuestScreen> {
         ref.read(audioProvider).runEnded();
       }
       final praise = _game.lastPraise;
-      // Let the final clear's effects play out first.
       Future.delayed(const Duration(milliseconds: 900), () {
         if (!mounted) return;
         Navigator.pushReplacement(
@@ -174,7 +182,8 @@ class _QuestScreenState extends ConsumerState<QuestScreen> {
                   Expanded(child: GameWidget(game: _game)),
                 ],
               ),
-              // "80% Done" encouragement ribbon.
+
+              // Milestone ribbon — bounces in, fades out quickly.
               Positioned(
                 top: 140,
                 left: 0,
@@ -182,26 +191,38 @@ class _QuestScreenState extends ConsumerState<QuestScreen> {
                 child: IgnorePointer(
                   child: AnimatedOpacity(
                     opacity: _bannerVisible ? 1 : 0,
-                    duration: const Duration(milliseconds: 300),
+                    duration: const Duration(milliseconds: 200),
                     child: Center(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 28,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE05B3A),
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: const [
-                            BoxShadow(color: Colors.black38, blurRadius: 10),
-                          ],
-                        ),
-                        child: Text(
-                          _bannerText ?? '',
-                          style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFFFFD54F),
+                      child: AnimatedBuilder(
+                        animation: _bannerAnim,
+                        builder: (_, child) {
+                          final t = Curves.elasticOut.transform(
+                            _bannerAnim.value,
+                          );
+                          return Transform.scale(
+                            scale: 0.6 + t * 0.4,
+                            child: child,
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 28,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE05B3A),
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: const [
+                              BoxShadow(color: Colors.black38, blurRadius: 12),
+                            ],
+                          ),
+                          child: Text(
+                            _bannerText ?? '',
+                            style: const TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFFFFD54F),
+                            ),
                           ),
                         ),
                       ),
@@ -209,53 +230,18 @@ class _QuestScreenState extends ConsumerState<QuestScreen> {
                   ),
                 ),
               ),
-              // Stage goal, centered, at the start of the stage.
+
+              // Stage-start goal popup — quick, punchy, specific.
               Center(
                 child: IgnorePointer(
                   child: AnimatedScale(
-                    scale: _goalVisible ? 1 : 0.6,
-                    duration: const Duration(milliseconds: 350),
+                    scale: _goalVisible ? 1 : 0.7,
+                    duration: const Duration(milliseconds: 280),
                     curve: Curves.easeOutBack,
                     child: AnimatedOpacity(
                       opacity: _goalVisible ? 1 : 0,
-                      duration: const Duration(milliseconds: 300),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 18,
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xE6202C54),
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(
-                            color: const Color(0xFFF2C94C),
-                            width: 2,
-                          ),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Text(
-                              'GOAL',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFFF2C94C),
-                                letterSpacing: 3,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              goalDescription(run.stage.goal),
-                              style: const TextStyle(
-                                fontSize: 26,
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      duration: const Duration(milliseconds: 200),
+                      child: _GoalPopup(run: run),
                     ),
                   ),
                 ),
@@ -268,11 +254,68 @@ class _QuestScreenState extends ConsumerState<QuestScreen> {
   }
 }
 
-/// Score goal → progress pill (current score sliding toward the target).
-/// Gems goal → one counter per color, ✓ when done.
+/// Compact popup shown at stage start — the specific target, not just the
+/// type. Designed to be read in under a second.
+class _GoalPopup extends StatelessWidget {
+  const _GoalPopup({required this.run});
+  final QuestRun run;
+
+  @override
+  Widget build(BuildContext context) {
+    final (icon, headline, detail) = switch (run.stage.goal) {
+      ScoreGoal(target: final t) => ('🎯', 'Score $t', 'points to win'),
+      GemsGoal(counts: final c) => ('💎', _gemHeadline(c), 'gems to collect'),
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xEE1A2540),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFF2C94C), width: 2),
+        boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 20)],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 32)),
+          const SizedBox(height: 4),
+          Text(
+            headline,
+            style: const TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              height: 1.1,
+            ),
+          ),
+          Text(
+            detail,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Color(0xFFF2C94C),
+              fontWeight: FontWeight.w600,
+              letterSpacing: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _gemHeadline(Map<GemColor, int> counts) {
+    final total = counts.values.fold(0, (a, b) => a + b);
+    if (counts.length == 1) {
+      final color = counts.keys.first.name;
+      return '${counts.values.first} ${color[0].toUpperCase()}${color.substring(1)}';
+    }
+    return '$total across ${counts.length} colors';
+  }
+}
+
+/// Score progress pill + gem counters in the HUD above the board.
 class _GoalHud extends StatelessWidget {
   const _GoalHud({required this.run});
-
   final QuestRun run;
 
   @override
@@ -318,7 +361,7 @@ class _GoalHud extends StatelessWidget {
                   remaining:
                       entry.value - (run.game.gemsCollected[entry.key] ?? 0),
                 ),
-                const SizedBox(width: 24),
+                const SizedBox(width: 20),
               ],
             ],
           ),
@@ -329,21 +372,25 @@ class _GoalHud extends StatelessWidget {
 
 class _GemCounter extends StatelessWidget {
   const _GemCounter({required this.color, required this.remaining});
-
   final GemColor color;
   final int remaining;
 
   @override
   Widget build(BuildContext context) {
+    final done = remaining <= 0;
     return Column(
       children: [
-        Icon(Icons.star_rounded, size: 34, color: gt.gemColors[color]),
-        remaining <= 0
-            ? const Icon(Icons.check_circle, size: 20, color: Color(0xFF6FCF97))
+        Icon(
+          done ? Icons.star_rounded : Icons.star_outline_rounded,
+          size: 30,
+          color: gt.gemColors[color],
+        ),
+        done
+            ? const Icon(Icons.check_circle, size: 18, color: Color(0xFF6FCF97))
             : Text(
                 '$remaining',
                 style: const TextStyle(
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.w900,
                   color: Colors.white,
                 ),

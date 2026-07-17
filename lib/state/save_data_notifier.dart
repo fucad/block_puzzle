@@ -25,9 +25,13 @@ class SaveDataNotifier extends Notifier<SaveData> {
   void storeClassicRun(GameState run, int seed) =>
       _update(state.copyWith(classicRun: run, classicRunSeed: seed));
 
-  /// Ends the classic run: folds its score/combo into the all-time bests
-  /// and drops the resumable snapshot.
-  void recordClassicRunEnd({required int score, required int bestCombo}) {
+  /// Ends the classic run: folds its score/combo/allClears into the all-time
+  /// bests and drops the resumable snapshot.
+  void recordClassicRunEnd({
+    required int score,
+    required int bestCombo,
+    required int allClears,
+  }) {
     _update(
       state.copyWith(
         classicHighScore: score > state.classicHighScore
@@ -36,9 +40,32 @@ class SaveDataNotifier extends Notifier<SaveData> {
         allTimeBestCombo: bestCombo > state.allTimeBestCombo
             ? bestCombo
             : state.allTimeBestCombo,
+        bestAllClearsInRun: allClears > state.bestAllClearsInRun
+            ? allClears
+            : state.bestAllClearsInRun,
         clearClassicRun: true,
       ),
     );
+  }
+
+  /// Called on every placement (any mode) to accumulate lifetime stats.
+  void recordPlacement({
+    required int cellsPlaced,
+    required bool comboIncreased,
+  }) {
+    _update(
+      state.copyWith(
+        totalBlocksPlaced: state.totalBlocksPlaced + cellsPlaced,
+        totalCombos: comboIncreased ? state.totalCombos + 1 : null,
+      ),
+    );
+  }
+
+  /// Called at the end of a quest stage win to fold in all-clears.
+  void recordQuestWin({required int allClears}) {
+    if (allClears > state.bestAllClearsInRun) {
+      _update(state.copyWith(bestAllClearsInRun: allClears));
+    }
   }
 
   /// Persists the in-progress quest attempt so leaving the stage (or an
