@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'dev/screenshot_mode.dart';
 import 'state/providers.dart';
 import 'ui/main_menu_screen.dart';
 
@@ -10,6 +11,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   final prefs = await SharedPreferences.getInstance();
+  if (screenshotModeOn) await seedScreenshotSave(prefs);
   runApp(
     ProviderScope(
       overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
@@ -33,7 +35,7 @@ class BlockPuzzleApp extends StatelessWidget {
         brightness: Brightness.dark,
         fontFamily: 'Roboto',
       ),
-      home: const MainMenuScreen(),
+      home: screenshotModeOn ? screenshotHome() : const MainMenuScreen(),
     );
   }
 }

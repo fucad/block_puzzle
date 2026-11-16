@@ -1,0 +1,6 @@
+# Copy to android/key.properties (gitignored) and fill in. NEVER commit the real file.
+# storeFile is relative to android/app/ — or use an absolute path outside the repo.
+storePassword=CHANGE_ME
+keyPassword=CHANGE_ME
+keyAlias=upload
+storeFile=/Users/YOU/keys/fucad-upload.jks

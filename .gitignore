@@ -46,3 +46,8 @@ app.*.map.json
 
 # Golden test failure output
 test/**/failures/
+
+# Release signing secrets — never commit (see docs/RELEASE_CHECKLIST.md)
+/android/key.properties
+*.jks
+*.keystore
