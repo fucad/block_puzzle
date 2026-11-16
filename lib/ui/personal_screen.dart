@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../state/providers.dart';
 import '../state/quest_providers.dart';
+import 'block_art.dart';
 
 class PersonalScreen extends ConsumerWidget {
   const PersonalScreen({super.key});
@@ -73,59 +74,75 @@ class PersonalScreen extends ConsumerWidget {
                       const SizedBox(height: 20),
                       _sectionLabel('Personal Bests'),
                       const SizedBox(height: 10),
-                      _StatRow(items: [
-                        _StatData(
-                          pixels: _Icons.highScore,
-                          label: 'High Score',
-                          value: _fmt(save.classicHighScore),
-                        ),
-                        _StatData(
-                          pixels: _Icons.combo,
-                          label: 'Best Combo',
-                          value: '×${save.allTimeBestCombo}',
-                        ),
-                      ]),
+                      _StatRow(
+                        items: [
+                          _StatData(
+                            pixels: _Icons.highScore,
+                            color: const Color(0xFFF2C94C),
+                            label: 'High Score',
+                            value: _fmt(save.classicHighScore),
+                          ),
+                          _StatData(
+                            pixels: _Icons.combo,
+                            color: const Color(0xFFFF8A00),
+                            label: 'Best Combo',
+                            value: '×${save.allTimeBestCombo}',
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 10),
-                      _StatRow(items: [
-                        _StatData(
-                          pixels: _Icons.allClear,
-                          label: 'Best All-Clears',
-                          value: '${save.bestAllClearsInRun}',
-                        ),
-                        _StatData(
-                          pixels: _Icons.levels,
-                          label: 'Levels Beaten',
-                          value: '$levelsBeaten',
-                        ),
-                      ]),
+                      _StatRow(
+                        items: [
+                          _StatData(
+                            pixels: _Icons.allClear,
+                            color: const Color(0xFF56CCF2),
+                            label: 'Best All-Clears',
+                            value: '${save.bestAllClearsInRun}',
+                          ),
+                          _StatData(
+                            pixels: _Icons.levels,
+                            color: const Color(0xFF6FCF97),
+                            label: 'Levels Beaten',
+                            value: '$levelsBeaten',
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 20),
                       _sectionLabel('Lifetime Stats'),
                       const SizedBox(height: 10),
-                      _StatRow(items: [
-                        _StatData(
-                          pixels: _Icons.blocks,
-                          label: 'Blocks Placed',
-                          value: _fmt(save.totalBlocksPlaced),
-                        ),
-                        _StatData(
-                          pixels: _Icons.combosTotal,
-                          label: 'Combos Done',
-                          value: _fmt(save.totalCombos),
-                        ),
-                      ]),
+                      _StatRow(
+                        items: [
+                          _StatData(
+                            pixels: _Icons.blocks,
+                            color: const Color(0xFFA43BFF),
+                            label: 'Blocks Placed',
+                            value: _fmt(save.totalBlocksPlaced),
+                          ),
+                          _StatData(
+                            pixels: _Icons.combosTotal,
+                            color: const Color(0xFFEB5757),
+                            label: 'Combos Done',
+                            value: _fmt(save.totalCombos),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 10),
-                      _StatRow(items: [
-                        _StatData(
-                          pixels: _Icons.questStages,
-                          label: 'Quest Stages',
-                          value: '$levelsBeaten',
-                        ),
-                        _StatData(
-                          pixels: _Icons.packs,
-                          label: 'Packs Played',
-                          value: '${save.questCompleted.length}',
-                        ),
-                      ]),
+                      _StatRow(
+                        items: [
+                          _StatData(
+                            pixels: _Icons.questStages,
+                            color: const Color(0xFFFFCE00),
+                            label: 'Quest Stages',
+                            value: '$levelsBeaten',
+                          ),
+                          _StatData(
+                            pixels: _Icons.packs,
+                            color: const Color(0xFF2B82FF),
+                            label: 'Packs Played',
+                            value: '${save.questCompleted.length}',
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 28),
                       const _EthicsNote(),
                     ],
@@ -193,7 +210,12 @@ abstract final class _Icons {
   // I-piece green (horizontal) → levels
   static const List<List<Color?>> levels = [
     [_, _, _, _],
-    [Color(0xFF6FCF97), Color(0xFF6FCF97), Color(0xFF6FCF97), Color(0xFF6FCF97)],
+    [
+      Color(0xFF6FCF97),
+      Color(0xFF6FCF97),
+      Color(0xFF6FCF97),
+      Color(0xFF6FCF97),
+    ],
     [_, _, _, _],
     [_, _, _, _],
   ];
@@ -231,83 +253,7 @@ abstract final class _Icons {
   ];
 }
 
-// Renders a 2-D grid of colored block-pixels.
-class _PixelArt extends StatelessWidget {
-  const _PixelArt({required this.pixels, this.px = 8.0});
-  final List<List<Color?>> pixels;
-  final double px;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (final row in pixels)
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final color in row)
-                SizedBox(
-                  width: px,
-                  height: px,
-                  child: color == null
-                      ? null
-                      : Container(
-                          margin: EdgeInsets.all(px * 0.1),
-                          decoration: BoxDecoration(
-                            color: color,
-                            borderRadius: BorderRadius.circular(px * 0.22),
-                          ),
-                        ),
-            ),
-            ],
-          ),
-      ],
-    );
-  }
-}
-
 // ── Treasure hero ─────────────────────────────────────────────────────────────
-
-// Block-drawn treasure chest (6×5 pixel grid).
-class _BlockChest extends StatelessWidget {
-  const _BlockChest({this.size = 60.0});
-  final double size;
-
-  static const List<List<Color>> _pixels = [
-    [Color(0xFFF2C94C), Color(0xFFF2C94C), Color(0xFFF2C94C), Color(0xFFF2C94C), Color(0xFFF2C94C), Color(0xFFF2C94C)],
-    [Color(0xFFFFE082), Color(0xFFFFE082), Color(0xFFFFE082), Color(0xFFFFE082), Color(0xFFFFE082), Color(0xFFFFE082)],
-    [Color(0xFF8B5A2B), Color(0xFF8B5A2B), Color(0xFFF2C94C), Color(0xFFF2C94C), Color(0xFF8B5A2B), Color(0xFF8B5A2B)],
-    [Color(0xFF8B5A2B), Color(0xFF8B5A2B), Color(0xFFF2C94C), Color(0xFFF2C94C), Color(0xFF8B5A2B), Color(0xFF8B5A2B)],
-    [Color(0xFF5C3A1A), Color(0xFF5C3A1A), Color(0xFF5C3A1A), Color(0xFF5C3A1A), Color(0xFF5C3A1A), Color(0xFF5C3A1A)],
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final px = size / 6;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (final row in _pixels)
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final color in row)
-                Container(
-                  width: px,
-                  height: px,
-                  margin: EdgeInsets.all(px * 0.06),
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(px * 0.2),
-                  ),
-                ),
-            ],
-          ),
-      ],
-    );
-  }
-}
 
 class _TreasureHero extends StatefulWidget {
   const _TreasureHero({required this.count});
@@ -343,11 +289,9 @@ class _TreasureHeroState extends State<_TreasureHero>
         children: [
           AnimatedBuilder(
             animation: _pulse,
-            builder: (_, child) => Transform.scale(
-              scale: 1.0 + _pulse.value * 0.07,
-              child: child,
-            ),
-            child: const _BlockChest(size: 64),
+            builder: (_, child) =>
+                Transform.scale(scale: 1.0 + _pulse.value * 0.07, child: child),
+            child: const BlockArt(grid: BlockGlyphs.chestOpen, cell: 11),
           ),
           const SizedBox(width: 20),
           Expanded(
@@ -391,10 +335,12 @@ class _TreasureHeroState extends State<_TreasureHero>
 class _StatData {
   const _StatData({
     required this.pixels,
+    required this.color,
     required this.label,
     required this.value,
   });
   final List<List<Color?>> pixels;
+  final Color color;
   final String label;
   final String value;
 }
@@ -423,25 +369,29 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
       decoration: BoxDecoration(
-        color: const Color(0xFF1C2C4A),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [data.color.withValues(alpha: 0.16), const Color(0xFF16233F)],
+        ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0x1AFFFFFF), width: 1),
+        border: Border.all(color: data.color.withValues(alpha: 0.35), width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Block-pixel icon in a tinted square container.
+          // Glossy block-piece glyph in a tinted square container.
           Container(
-            width: 36,
-            height: 36,
+            width: 38,
+            height: 38,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: const Color(0x14FFFFFF),
+              color: data.color.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: _PixelArt(pixels: data.pixels, px: 8),
+            child: BlockArt(grid: data.pixels, cell: 7, gap: 0.6),
           ),
           const SizedBox(height: 10),
           Text(
@@ -458,7 +408,7 @@ class _StatCard extends StatelessWidget {
             data.label,
             style: const TextStyle(
               fontSize: 12,
-              color: Colors.white38,
+              color: Colors.white54,
               height: 1.2,
             ),
           ),
@@ -489,7 +439,11 @@ class _EthicsNote extends StatelessWidget {
           Expanded(
             child: Text(
               'Free forever. No ads. Open source.\nYour stats stay on your device only.',
-              style: TextStyle(color: Colors.white38, fontSize: 12, height: 1.4),
+              style: TextStyle(
+                color: Colors.white38,
+                fontSize: 12,
+                height: 1.4,
+              ),
             ),
           ),
         ],

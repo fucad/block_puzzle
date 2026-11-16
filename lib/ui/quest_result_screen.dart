@@ -7,6 +7,7 @@ import '../models/quest.dart';
 import '../state/providers.dart';
 import '../state/quest_game_controller.dart';
 import '../state/quest_providers.dart';
+import 'block_art.dart';
 import 'quest_screen.dart';
 
 /// Stage outcome. Win → dramatic fanfare. Lose → progress recap + Retry.
@@ -23,7 +24,8 @@ class QuestResultScreen extends ConsumerWidget {
 
     // Detect pack completion — all stages in this pack are now done.
     final save = ref.watch(saveDataProvider);
-    final isPackComplete = won &&
+    final isPackComplete =
+        won &&
         (save.questCompleted[run.pack.id]?.length ?? 0) >=
             run.pack.stages.length;
 
@@ -55,7 +57,12 @@ class QuestResultScreen extends ConsumerWidget {
                   ),
                   const Spacer(),
                   if (won) ...[
-                    _WinContent(praise: praise, levelNumber: run.levelNumber),
+                    _WinContent(
+                      praise: praise,
+                      levelNumber: run.levelNumber,
+                      isPackComplete: isPackComplete,
+                      packTitle: run.pack.title,
+                    ),
                   ] else ...[
                     const Text(
                       'So Close!',
@@ -112,9 +119,9 @@ class QuestResultScreen extends ConsumerWidget {
                           ),
                         ),
                         onPressed: () => _backToMap(context, ref),
-                        child: const Text(
-                          'Continue',
-                          style: TextStyle(
+                        child: Text(
+                          isPackComplete ? 'Claim Treasure' : 'Continue',
+                          style: const TextStyle(
                             fontSize: 26,
                             fontWeight: FontWeight.w800,
                             color: Colors.white,
@@ -145,9 +152,16 @@ class QuestResultScreen extends ConsumerWidget {
 // ── Win content ──────────────────────────────────────────────────────────────
 
 class _WinContent extends StatefulWidget {
-  const _WinContent({this.praise, required this.levelNumber});
+  const _WinContent({
+    this.praise,
+    required this.levelNumber,
+    required this.isPackComplete,
+    required this.packTitle,
+  });
   final String? praise;
   final int levelNumber;
+  final bool isPackComplete;
+  final String packTitle;
 
   @override
   State<_WinContent> createState() => _WinContentState();
@@ -160,7 +174,7 @@ class _WinContentState extends State<_WinContent>
     duration: const Duration(milliseconds: 900),
   )..forward();
 
-  // Level number bounces in after a short delay.
+  // Secondary element bounces in after a short delay.
   late final AnimationController _levelAnim = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 700),
@@ -183,6 +197,79 @@ class _WinContentState extends State<_WinContent>
 
   @override
   Widget build(BuildContext context) {
+    return widget.isPackComplete ? _buildPackComplete() : _buildLevelComplete();
+  }
+
+  // ── Whole pack cleared: the big hurray ──────────────────────────────────
+  Widget _buildPackComplete() {
+    final bounce = CurvedAnimation(parent: _c, curve: Curves.elasticOut);
+    final fade = CurvedAnimation(parent: _c, curve: Curves.easeIn);
+    final chestPop = CurvedAnimation(
+      parent: _levelAnim,
+      curve: Curves.elasticOut,
+    );
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ScaleTransition(
+          scale: bounce,
+          child: const BlockArt(grid: BlockGlyphs.chestOpen, cell: 20, gap: 2),
+        ),
+        const SizedBox(height: 20),
+        ScaleTransition(
+          scale: chestPop,
+          child: ShaderMask(
+            shaderCallback: (r) => const LinearGradient(
+              colors: [Color(0xFFFFE082), Color(0xFFF2A93B)],
+            ).createShader(r),
+            child: const Text(
+              'PACK COMPLETE!',
+              style: TextStyle(
+                fontSize: 38,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                letterSpacing: 1,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        FadeTransition(
+          opacity: fade,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0x33FFE082),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              '🎉  “${widget.packTitle}” cleared!',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFFFFE082),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        FadeTransition(
+          opacity: fade,
+          child: const Text(
+            'Every level beaten — a treasure is yours.\nWatch for new packs on the map!',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 14, color: Colors.white70, height: 1.4),
+          ),
+        ),
+        const SizedBox(height: 20),
+        FadeTransition(opacity: fade, child: const _StarRow()),
+      ],
+    );
+  }
+
+  // ── Single level cleared ────────────────────────────────────────────────
+  Widget _buildLevelComplete() {
     final bounce = CurvedAnimation(parent: _c, curve: Curves.elasticOut);
     final fade = CurvedAnimation(parent: _c, curve: Curves.easeIn);
     final levelBounce = CurvedAnimation(
@@ -195,9 +282,9 @@ class _WinContentState extends State<_WinContent>
       children: [
         ScaleTransition(
           scale: bounce,
-          child: const Text('🏆', style: TextStyle(fontSize: 80)),
+          child: const BlockArt(grid: BlockGlyphs.trophy, cell: 16, gap: 2),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 18),
         // "Level X" with animated number, then "Complete!" fades in below.
         FadeTransition(
           opacity: fade,
@@ -264,19 +351,25 @@ class _WinContentState extends State<_WinContent>
           ),
         ],
         const SizedBox(height: 24),
-        FadeTransition(
-          opacity: fade,
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text('⭐', style: TextStyle(fontSize: 36)),
-              SizedBox(width: 8),
-              Text('⭐', style: TextStyle(fontSize: 44)),
-              SizedBox(width: 8),
-              Text('⭐', style: TextStyle(fontSize: 36)),
-            ],
-          ),
-        ),
+        FadeTransition(opacity: fade, child: const _StarRow()),
+      ],
+    );
+  }
+}
+
+class _StarRow extends StatelessWidget {
+  const _StarRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text('⭐', style: TextStyle(fontSize: 36)),
+        SizedBox(width: 8),
+        Text('⭐', style: TextStyle(fontSize: 44)),
+        SizedBox(width: 8),
+        Text('⭐', style: TextStyle(fontSize: 36)),
       ],
     );
   }
@@ -521,7 +614,9 @@ class _BlockBurstPainter extends CustomPainter {
       canvas.drawRect(
         Rect.fromCenter(center: Offset.zero, width: b.size, height: b.size),
         Paint()
-          ..color = b.color.withValues(alpha: (1 - progress * 0.75).clamp(0, 1)),
+          ..color = b.color.withValues(
+            alpha: (1 - progress * 0.75).clamp(0, 1),
+          ),
       );
       canvas.restore();
     }

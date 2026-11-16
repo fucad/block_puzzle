@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../state/classic_game_controller.dart';
 import '../state/providers.dart';
+import 'block_art.dart';
 
 /// Post-run summary: big animated score, variant title, stat chips, retry.
 class RunSummaryScreen extends ConsumerStatefulWidget {
@@ -31,32 +32,37 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen>
     super.dispose();
   }
 
-  ({String title, IconData icon, List<Color> bg}) get _variant {
+  ({String title, String sub, List<List<Color?>> glyph, List<Color> bg})
+  get _variant {
     final s = widget.summary;
     if (s.newHighScore) {
       return (
         title: 'New Best!',
-        icon: Icons.emoji_events_rounded,
+        sub: 'A brand-new record',
+        glyph: BlockGlyphs.crown,
         bg: const [Color(0xFF3A2A00), Color(0xFF1E1500)],
       );
     }
     if (s.bestCombo >= _comboMasterMin) {
       return (
         title: 'Combo King!',
-        icon: Icons.bolt_rounded,
+        sub: 'Chains for days',
+        glyph: BlockGlyphs.bolt,
         bg: const [Color(0xFF2A0050), Color(0xFF150028)],
       );
     }
     if (s.allClears >= _allClearAceMin) {
       return (
         title: 'Flawless!',
-        icon: Icons.auto_awesome_rounded,
+        sub: 'Board wiped clean',
+        glyph: BlockGlyphs.star,
         bg: const [Color(0xFF002A40), Color(0xFF001520)],
       );
     }
     return (
       title: 'Well Done!',
-      icon: Icons.thumb_up_rounded,
+      sub: 'Nice run',
+      glyph: BlockGlyphs.trophy,
       bg: const [Color(0xFF1A2540), Color(0xFF0D1526)],
     );
   }
@@ -102,16 +108,12 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen>
               ),
               const Spacer(),
 
-              // Icon + title
+              // Block-art glyph + title
               ScaleTransition(
                 scale: iconBounce,
-                child: Icon(
-                  variant.icon,
-                  size: 68,
-                  color: const Color(0xFFFFE082),
-                ),
+                child: BlockArt(grid: variant.glyph, cell: 14, gap: 1.5),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 16),
               FadeTransition(
                 opacity: fade,
                 child: Text(
@@ -120,6 +122,19 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen>
                     fontSize: 40,
                     fontWeight: FontWeight.w900,
                     color: Color(0xFFFFE082),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 2),
+              FadeTransition(
+                opacity: fade,
+                child: Text(
+                  variant.sub,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white38,
+                    letterSpacing: 1,
                   ),
                 ),
               ),
@@ -149,6 +164,20 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen>
                     ),
                     child: Column(
                       children: [
+                        // Little row of blocks as a header accent.
+                        const BlockArt(
+                          grid: [
+                            [
+                              Color(0xFFFF2E2E),
+                              Color(0xFF2FD048),
+                              Color(0xFF2B82FF),
+                              Color(0xFFFFCE00),
+                            ],
+                          ],
+                          cell: 8,
+                          gap: 2,
+                        ),
+                        const SizedBox(height: 10),
                         ScaleTransition(
                           scale: scoreBounce,
                           child: Text(
@@ -163,9 +192,7 @@ class _RunSummaryScreenState extends ConsumerState<RunSummaryScreen>
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          s.newHighScore
-                              ? 'New Personal Best!'
-                              : 'Score',
+                          s.newHighScore ? 'New Personal Best!' : 'Score',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,

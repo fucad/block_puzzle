@@ -214,18 +214,13 @@ void _showFeedbackSheet(BuildContext context) {
             onTap: () {
               Navigator.pop(ctx);
               launchUrl(
-                Uri.parse(
-                  'https://github.com/fucad/block_puzzle/issues/new',
-                ),
+                Uri.parse('https://github.com/fucad/block_puzzle/issues/new'),
                 mode: LaunchMode.externalApplication,
               );
             },
           ),
           ListTile(
-            leading: const Icon(
-              Icons.email_rounded,
-              color: Color(0xFFF2C94C),
-            ),
+            leading: const Icon(Icons.email_rounded, color: Color(0xFFF2C94C)),
             title: const Text(
               'Send Email',
               style: TextStyle(
@@ -243,9 +238,7 @@ void _showFeedbackSheet(BuildContext context) {
                 Uri(
                   scheme: 'mailto',
                   path: 'dal001.dev@gmail.com',
-                  queryParameters: {
-                    'subject': '[Block Puzzle] Feedback',
-                  },
+                  queryParameters: {'subject': '[Block Puzzle] Feedback'},
                 ),
                 mode: LaunchMode.externalApplication,
               );

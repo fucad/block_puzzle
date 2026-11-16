@@ -5,6 +5,7 @@ import '../models/quest.dart';
 import '../state/providers.dart';
 import '../state/quest_game_controller.dart';
 import '../state/quest_providers.dart';
+import 'block_art.dart';
 import 'quest_screen.dart';
 
 /// The quest map as a treasure hunt: a dashed golden trail winds bottom-up
@@ -208,10 +209,7 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
                               clipBehavior: Clip.none,
                               children: [
                                 // Decorative scenery near specific nodes.
-                                _MapScenery(
-                                  width: width,
-                                  centers: centers,
-                                ),
+                                _MapScenery(width: width, centers: centers),
                                 CustomPaint(
                                   size: Size(width, totalHeight),
                                   painter: _TrailPainter(
@@ -318,20 +316,97 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
   void _chestDialog(BuildContext context, bool open, int total) {
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(open ? 'Treasure Hunter!' : 'Locked treasure'),
-        content: Text(
-          open
-              ? 'You cleared all $total levels — the whole trail is yours. '
-                    'New packs arrive right here when they release.'
-              : 'Clear all $total levels of the trail to open the chest.',
-        ),
-        actions: [
-          FilledButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(open ? 'Glorious' : 'On it'),
+      barrierColor: Colors.black87,
+      builder: (context) => _ChestDialog(open: open, total: total),
+    );
+  }
+}
+
+/// Themed treasure-chest dialog — replaces the plain Material AlertDialog.
+class _ChestDialog extends StatelessWidget {
+  const _ChestDialog({required this.open, required this.total});
+  final bool open;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = open ? const Color(0xFFF2C94C) : const Color(0xFF56CCF2);
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 36),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(24, 28, 24, 22),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF20315A), Color(0xFF141F3A)],
           ),
-        ],
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: accent.withValues(alpha: 0.5), width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: accent.withValues(alpha: 0.25),
+              blurRadius: 28,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            BlockArt(
+              grid: open ? BlockGlyphs.chestOpen : BlockGlyphs.lock,
+              cell: 18,
+              gap: 2,
+            ),
+            const SizedBox(height: 18),
+            Text(
+              open ? 'Treasure Hunter!' : 'Locked Treasure',
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w900,
+                color: accent,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              open
+                  ? 'You cleared all $total levels — the whole trail is '
+                        'yours. New packs arrive right here when they release.'
+                  : 'Clear all $total levels of the trail to unlock the '
+                        'chest and claim your treasure.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.white70,
+                height: 1.45,
+              ),
+            ),
+            const SizedBox(height: 22),
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: accent,
+                  foregroundColor: const Color(0xFF16233F),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  open ? 'Glorious!' : 'On It',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -478,7 +553,11 @@ class _MapScenery extends StatelessWidget {
     ],
     // T-piece: purple
     [
-      [const Color(0xFFA43BFF), const Color(0xFFA43BFF), const Color(0xFFA43BFF)],
+      [
+        const Color(0xFFA43BFF),
+        const Color(0xFFA43BFF),
+        const Color(0xFFA43BFF),
+      ],
       [null, const Color(0xFFA43BFF), null],
     ],
   ];
@@ -489,7 +568,11 @@ class _MapScenery extends StatelessWidget {
 
     // Place one decoration per 10 nodes, up to 3 total.
     final placements = <(int nodeIdx, int pieceIdx)>[];
-    for (var i = 9; i < centers.length && placements.length < _pieces.length; i += 10) {
+    for (
+      var i = 9;
+      i < centers.length && placements.length < _pieces.length;
+      i += 10
+    ) {
       placements.add((i, placements.length));
     }
 
