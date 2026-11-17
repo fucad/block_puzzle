@@ -104,7 +104,7 @@ class _SettingsSheet extends ConsumerWidget {
             'from our public GitHub repository — an anonymous file '
             'download containing no data about you. The game is fully '
             'playable offline.\n\n'
-            'Full policy: github.com/fucad/block_puzzle/PRIVACY.md',
+            'Full policy: fucad.github.io/privacy/block-puzzle.html',
           ),
         ),
         actions: [

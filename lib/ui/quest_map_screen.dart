@@ -5,6 +5,7 @@ import '../models/quest.dart';
 import '../state/providers.dart';
 import '../state/quest_game_controller.dart';
 import '../state/quest_providers.dart';
+import 'block_art.dart';
 import 'quest_screen.dart';
 
 /// The quest map as a treasure hunt: a dashed golden trail winds bottom-up
@@ -23,11 +24,11 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
   final _scroll = ScrollController();
   bool _jumped = false;
 
-  static const _perRow = 4;
-  static const _rowHeight = 96.0;
-  static const _chestArea = 170.0;
+  static const _perRow = 3;
+  static const _rowHeight = 130.0;
+  static const _chestArea = 200.0;
   static const _bottomPad = 28.0;
-  static const _colFractions = [0.15, 0.38, 0.62, 0.85];
+  static const _colFractions = [0.18, 0.50, 0.82];
 
   // Advance-to-next-stage animation: the trail fills from the just-cleared
   // node to the new current one, which then lights up.
@@ -207,6 +208,8 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
                             child: Stack(
                               clipBehavior: Clip.none,
                               children: [
+                                // Decorative scenery near specific nodes.
+                                _MapScenery(width: width, centers: centers),
                                 CustomPaint(
                                   size: Size(width, totalHeight),
                                   painter: _TrailPainter(
@@ -288,9 +291,22 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
   }
 
   void _play(BuildContext context, _LevelNode node) {
-    ref
-        .read(questGameProvider.notifier)
-        .start(node.pack, node.stage, levelNumber: node.number);
+    final controller = ref.read(questGameProvider.notifier);
+    final save = ref.read(saveDataProvider);
+    // Resume a persisted in-progress attempt of this exact stage; otherwise
+    // start it fresh from its layout.
+    if (save.questRun != null &&
+        save.questRunPackId == node.pack.id &&
+        save.questRunStageId == node.stage.id) {
+      controller.resume(
+        node.pack,
+        node.stage,
+        levelNumber: node.number,
+        game: save.questRun!,
+      );
+    } else {
+      controller.start(node.pack, node.stage, levelNumber: node.number);
+    }
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const QuestScreen()),
@@ -300,20 +316,97 @@ class _QuestMapScreenState extends ConsumerState<QuestMapScreen>
   void _chestDialog(BuildContext context, bool open, int total) {
     showDialog<void>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(open ? 'Treasure Hunter!' : 'Locked treasure'),
-        content: Text(
-          open
-              ? 'You cleared all $total levels — the whole trail is yours. '
-                    'New packs arrive right here when they release.'
-              : 'Clear all $total levels of the trail to open the chest.',
-        ),
-        actions: [
-          FilledButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(open ? 'Glorious' : 'On it'),
+      barrierColor: Colors.black87,
+      builder: (context) => _ChestDialog(open: open, total: total),
+    );
+  }
+}
+
+/// Themed treasure-chest dialog — replaces the plain Material AlertDialog.
+class _ChestDialog extends StatelessWidget {
+  const _ChestDialog({required this.open, required this.total});
+  final bool open;
+  final int total;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = open ? const Color(0xFFF2C94C) : const Color(0xFF56CCF2);
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 36),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(24, 28, 24, 22),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF20315A), Color(0xFF141F3A)],
           ),
-        ],
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: accent.withValues(alpha: 0.5), width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: accent.withValues(alpha: 0.25),
+              blurRadius: 28,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            BlockArt(
+              grid: open ? BlockGlyphs.chestOpen : BlockGlyphs.lock,
+              cell: 18,
+              gap: 2,
+            ),
+            const SizedBox(height: 18),
+            Text(
+              open ? 'Treasure Hunter!' : 'Locked Treasure',
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w900,
+                color: accent,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              open
+                  ? 'You cleared all $total levels — the whole trail is '
+                        'yours. New packs arrive right here when they release.'
+                  : 'Clear all $total levels of the trail to unlock the '
+                        'chest and claim your treasure.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.white70,
+                height: 1.45,
+              ),
+            ),
+            const SizedBox(height: 22),
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: accent,
+                  foregroundColor: const Color(0xFF16233F),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  open ? 'Glorious!' : 'On It',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -438,22 +531,164 @@ class _NodeTile extends StatelessWidget {
   }
 }
 
+/// Mini game-piece blocks placed beside every 10th quest node (max 3 total).
+/// Uses actual tetromino shapes to keep the block-game theme.
+class _MapScenery extends StatelessWidget {
+  const _MapScenery({required this.width, required this.centers});
+  final double width;
+  final List<Offset> centers;
+
+  // Three tetromino shapes with game palette colors.
+  static final List<List<List<Color?>>> _pieces = [
+    // L-piece: orange
+    [
+      [const Color(0xFFFF8A00), null],
+      [const Color(0xFFFF8A00), null],
+      [const Color(0xFFFF8A00), const Color(0xFFFF8A00)],
+    ],
+    // S-piece: blue
+    [
+      [null, const Color(0xFF2B82FF), const Color(0xFF2B82FF)],
+      [const Color(0xFF2B82FF), const Color(0xFF2B82FF), null],
+    ],
+    // T-piece: purple
+    [
+      [
+        const Color(0xFFA43BFF),
+        const Color(0xFFA43BFF),
+        const Color(0xFFA43BFF),
+      ],
+      [null, const Color(0xFFA43BFF), null],
+    ],
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    if (centers.isEmpty) return const SizedBox.shrink();
+
+    // Place one decoration per 10 nodes, up to 3 total.
+    final placements = <(int nodeIdx, int pieceIdx)>[];
+    for (
+      var i = 9;
+      i < centers.length && placements.length < _pieces.length;
+      i += 10
+    ) {
+      placements.add((i, placements.length));
+    }
+
+    return Stack(
+      children: [
+        for (final (nodeIdx, pieceIdx) in placements)
+          _buildPiece(nodeIdx, pieceIdx),
+      ],
+    );
+  }
+
+  Widget _buildPiece(int nodeIdx, int pieceIdx) {
+    final center = centers[nodeIdx];
+    final piece = _pieces[pieceIdx];
+    final colCount = piece.fold(0, (m, r) => r.length > m ? r.length : m);
+    final pieceW = colCount * 22.0; // 18px block + 4px margin
+
+    // Alternate left / right, clamped inside screen bounds.
+    final double left;
+    if (pieceIdx.isEven) {
+      left = (center.dx - 46 - pieceW).clamp(4.0, (width - pieceW - 4.0));
+    } else {
+      left = (center.dx + 42).clamp(4.0, (width - pieceW - 4.0));
+    }
+
+    return Positioned(
+      left: left,
+      top: center.dy - piece.length * 11.0,
+      child: Opacity(opacity: 0.7, child: _BlockPiece(grid: piece)),
+    );
+  }
+}
+
+/// Renders a 2-D grid as colored game blocks (tetromino cell style).
+class _BlockPiece extends StatelessWidget {
+  const _BlockPiece({required this.grid});
+  final List<List<Color?>> grid;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (final row in grid)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (final color in row)
+                Container(
+                  width: 18,
+                  height: 18,
+                  margin: const EdgeInsets.all(2),
+                  decoration: color == null
+                      ? null
+                      : BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(4),
+                          boxShadow: [
+                            BoxShadow(
+                              color: color.withValues(alpha: 0.5),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                ),
+            ],
+          ),
+      ],
+    );
+  }
+}
+
 /// The prize at the end of the trail. Achievement only — it never grants
 /// anything, so it never needs to sell anything.
-class _TreasureChest extends StatelessWidget {
+class _TreasureChest extends StatefulWidget {
   const _TreasureChest({required this.open, required this.onTap});
 
   final bool open;
   final VoidCallback onTap;
 
   @override
+  State<_TreasureChest> createState() => _TreasureChestState();
+}
+
+class _TreasureChestState extends State<_TreasureChest>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _bob = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1600),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _bob.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
-      child: SizedBox(
-        width: 88,
-        height: 88,
-        child: CustomPaint(painter: _ChestPainter(open: open)),
+      onTap: widget.onTap,
+      child: AnimatedBuilder(
+        animation: _bob,
+        builder: (_, child) => Transform.translate(
+          offset: Offset(0, -_bob.value * (widget.open ? 5 : 2)),
+          child: Transform.scale(
+            scale: widget.open ? 1.0 + _bob.value * 0.05 : 1.0,
+            child: child,
+          ),
+        ),
+        child: SizedBox(
+          width: 88,
+          height: 88,
+          child: CustomPaint(painter: _ChestPainter(open: widget.open)),
+        ),
       ),
     );
   }

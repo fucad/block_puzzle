@@ -55,8 +55,10 @@ class TrayPieceComponent extends PositionComponent
         cellSide,
         cellSide,
       );
-      paintBlock(canvas, rect, color);
       final gem = gems[i];
+      // Gem-bearing cells use the neutral light tile so the gem reads the
+      // same in the tray as it does once placed on the board.
+      paintBlock(canvas, rect, gem != null ? puzzleBlockLight : color);
       if (gem != null) paintGemStar(canvas, rect, gemColors[gem]!);
     }
   }

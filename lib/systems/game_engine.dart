@@ -13,6 +13,7 @@ import 'scoring.dart';
 class PlacementEvents {
   const PlacementEvents({
     required this.scoreDelta,
+    required this.cellsPlaced,
     required this.clearedRows,
     required this.clearedCols,
     required this.combo,
@@ -22,6 +23,7 @@ class PlacementEvents {
   });
 
   final int scoreDelta;
+  final int cellsPlaced;
   final List<int> clearedRows;
   final List<int> clearedCols;
 
@@ -179,6 +181,7 @@ class GameEngine {
       nextState,
       PlacementEvents(
         scoreDelta: delta,
+        cellsPlaced: piece.cells.length,
         clearedRows: clear.rows,
         clearedCols: clear.cols,
         combo: combo,

@@ -1,6 +1,7 @@
 # Privacy Policy — Block Puzzle
 
-**Last updated: 2026-07-12**
+**Last updated: 2026-11-16** · Hosted copy (EN/한국어), used as the store
+privacy URL: https://fucad.github.io/privacy/block-puzzle.html
 
 Block Puzzle collects **nothing**. This is the whole policy, but stores
 require the details, so:
@@ -32,6 +33,11 @@ No data about you or your play is sent — the request contains nothing
 but "please give me the level list". The game is fully playable
 offline.
 
+## Optional contact
+
+If you choose to send feedback from the app, it opens your own email app
+or GitHub in your browser. We only see what you choose to send.
+
 ## Children
 
 The app is suitable for all ages. Since it collects no data at all, it
@@ -44,4 +50,5 @@ history — which will forever show that nothing was ever collected.
 
 ## Contact
 
-Open an issue at https://github.com/fucad/block_puzzle/issues
+Email dal001.dev@gmail.com or open an issue at
+https://github.com/fucad/block_puzzle/issues

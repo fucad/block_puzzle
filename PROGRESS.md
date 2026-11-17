@@ -38,11 +38,11 @@ device/simulator).
 
 ## NEXT SESSION — resume here
 
-ALL MILESTONES M0–M4 are done except the user-side release checklist
-above (keystore, iOS SDK install, store art, repo push). Good follow-ups
-when development resumes: a second theme (wood — proves the picker),
-lose-screen/80%-banner visual eyeballing during play, a CI workflow
-(analyze+test+content validation), and store screenshots.
+v1.0.0 is RELEASE-READY in the repo (2026-11-16). Remaining steps are
+owner-only and listed in docs/RELEASE_CHECKLIST.md (Play/App Store
+accounts, upload keystore, signing, uploads, pushing repos). Dev
+follow-ups: Korean in-app strings (store copy already has KO), a second
+theme, real low-end device perf pass.
 
 ## M3 — Quest mode
 
@@ -77,24 +77,51 @@ lose-screen/80%-banner visual eyeballing during play, a CI workflow
 - [x] App icon (rendered in-repo by test/tools/render_icon_test.dart,
       adaptive + iOS via flutter_launcher_icons), store copy drafted
       (docs/STORE_LISTING.md), README/CONTRIBUTING/PURPOSE complete
-- [~] Release builds: Android verified (aab 50.2MB + apk, release mode
-      played on emulator). iOS blocked by local toolchain: Xcode lacks
-      the iOS platform SDK (install via Xcode ▸ Settings ▸ Components,
-      then `flutter build ios --release --no-codesign`)
+- [x] Release builds: `flutter build appbundle --release` (51.0MB AAB,
+      multi-ABI) and `flutter build ios --release --no-codesign` (iOS SDK
+      26.5 now installed) both succeed — 2026-11-16
+- [x] Store package (2026-11-16): signing via key.properties, EN+KO
+      listing + questionnaire answers, hosted privacy page, screenshots
+      (iOS 6.9" + Play, EN+KO), feature graphic, release CI, checklist
 
 ## Release checklist (user-side, never in repo)
 
-- [ ] Android upload keystore + key.properties (secrets — keep local)
-- [ ] Install iOS platform SDK in Xcode; build + archive
-- [ ] Store screenshots + Play feature graphic (docs/STORE_LISTING.md)
-- [ ] Push repo to github.com/fucad/block_puzzle (activates quest fetch)
-- [ ] Real low-end device perf sanity check
+Moved to docs/RELEASE_CHECKLIST.md (step-by-step). Summary:
+- [ ] Play Console account (+ 12-tester/14-day closed test) and Apple Developer membership
+- [ ] Android upload keystore + android/key.properties (secrets — keep local)
+- [x] iOS platform SDK installed; unsigned release build verified
+- [x] Store screenshots + Play feature graphic (docs/store/)
+- [ ] Push dev→main and push fucad.github.io (privacy URL must resolve)
+- [ ] Real-device release-build play test, incl. a low-end Android
 
 ## Deferred work
 
 (none yet — list items here with reason instead of dropping them)
 
 ## Decisions log
+
+### 2026-11-16 — Release prep (v1.0.0)
+- Verified: format clean, analyze 0 issues, 95 tests pass, 3 quest packs
+  valid, release AAB + unsigned iOS build succeed.
+- Committed the in-progress block-art UI polish found uncommitted (it
+  analyzed + tested clean).
+- Version 0.1.0+1 → 1.0.0+1 for the first store release.
+- Android: release signingConfig reads android/key.properties (gitignored,
+  *.jks ignored, template key.properties.example); without it, release
+  falls back to debug signing so `flutter run --release`/CI still work.
+- iOS: iPhone-only (TARGETED_DEVICE_FAMILY=1) so no iPad screenshots are
+  required; portrait-only + UIRequiresFullScreen; ITSAppUsesNonExempt-
+  Encryption=false. DEVELOPMENT_TEAM DCL6T6WR64 (set by owner in Xcode).
+- Screenshot mode: `--dart-define=SHOT=<scene>` seeds a deterministic
+  save and opens one screen (lib/dev/screenshot_mode.dart); captured on
+  the iPhone 17 Pro Max simulator by tool/capture_screenshots.sh and
+  framed with EN/KO captions by tool/compose_store_art.py
+  (docs/SCREENSHOTS.md). Inert unless SHOT is set.
+- Privacy policy now hosted at fucad.github.io/privacy/block-puzzle.html
+  (EN+KO); in-app Settings text points there.
+- .github/workflows/release.yml: on v* tags builds a signed AAB from
+  repo secrets (debug-signed with a warning if absent) + unsigned iOS
+  compile check. Never uploads.
 
 ### 2026-07-11 — Project start
 - Repo was empty except LICENSE (MIT). Created PROGRESS.md from the build
@@ -172,6 +199,24 @@ lose-screen/80%-banner visual eyeballing during play, a CI workflow
 - Session ended mid slice-D device verification at user request; all
   code committed on `dev`, working tree clean, 43/43 tests green.
 
+### 2026-07-16 — Playtest: quest resume, gem tiles, difficulty tuning
+- Quest attempts now resume: SaveData carries questRun (GameState) +
+  pack/stage/level ids; controller persists on start/each move, clears on
+  win/loss; quit keeps the snapshot; the map's _play resumes it if the
+  saved run matches the tapped node. Leaving a stage or app-kill no longer
+  loses progress (parity with classic).
+- Gem-bearing blocks always draw on the neutral light tile — in the tray
+  and once placed — so the gem never fights the piece color (before, only
+  pre-placed gems were light).
+- Difficulty (user feedback "too easy"): score targets raised but floored
+  ABOVE each stage's opening ceiling. Added solvability.maxOpeningScore
+  (best score the opening tray can make, all-clear +300 included) and a
+  validator rule rejecting score targets ≤ that ceiling — four stages
+  (s01/s02/t01/d01) were literally winnable from the opening before.
+  New score ramps ~500→1200. Gem goals: every gem stage now asks for 3–5
+  colors (was many single-color), counts grow more aggressively. Opening
+  cascade kept as-is per user; the higher goals carry the difficulty.
+
 ### 2026-07-16 — Gems ride on tray pieces (quest gem stages reworked)
 - User: pre-placing all gems on the grid made stages swingy and capped
   goals low. Now gems spawn on generated tray pieces (assignGems, ~50%
@@ -180,8 +225,8 @@ lose-screen/80%-banner visual eyeballing during play, a CI workflow
   A placed gem is collected when a line through it clears.
 - Model: GameState gains trayGems (per-slot cell→color) + gemGoal;
   placement.stampWithGems; engine threads gems on place/refill; the
-  controller passes the goal; board renders placed gems in the piece
-  color (pre-placed stay light); tray pieces show their gems.
+  controller passes the goal; board + tray render gems (gem tiles later
+  moved to the neutral light substrate everywhere — see 07-16 playtest).
 - Validator: dropped the "board must contain the goal's gems" rule
   (obsolete); added a gem-count sanity range. All 20 gem stages had
   their board gems stripped and goals raised (single 8 / two 6 / three 5).

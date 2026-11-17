@@ -75,14 +75,14 @@ const GameTheme defaultTheme = GameTheme(
   // Brightened after playtest feedback (2026-07-14): the original set
   // read too dark on real phone panels next to genre peers.
   blockPalette: [
-    Color(0xFFFF6161), // 0 red
-    Color(0xFF59D96A), // 1 green
-    Color(0xFFFFA033), // 2 orange
-    Color(0xFFFFD84D), // 3 yellow
-    Color(0xFF4D9BFF), // 4 blue
-    Color(0xFFBB6BFF), // 5 purple
-    Color(0xFF3FD9F5), // 6 cyan
-    Color(0xFFFF7BC4), // 7 pink
+    Color(0xFFFF2E2E), // 0 red
+    Color(0xFF2FD048), // 1 green
+    Color(0xFFFF8A00), // 2 orange
+    Color(0xFFFFCE00), // 3 yellow
+    Color(0xFF2B82FF), // 4 blue
+    Color(0xFFA43BFF), // 5 purple
+    Color(0xFF12CFEF), // 6 cyan
+    Color(0xFFFF52AE), // 7 pink
   ],
   ghostOverlay: Color(0x66FFFFFF),
   lineHighlight: Color(0xAAFFF176),

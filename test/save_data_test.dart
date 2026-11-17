@@ -100,6 +100,49 @@ void main() {
     expect(restored.gemGoal, {GemColor.red: 5, GemColor.blue: 3});
   });
 
+  test('an in-progress quest run survives a JSON round trip', () {
+    final questRun = GameEngine.newGame(
+      42,
+      gemGoal: {GemColor.red: 5, GemColor.blue: 5, GemColor.green: 5},
+    ).copyWith(score: 120, gemsCollected: {GemColor.red: 2});
+
+    final data = SaveData(
+      questRun: questRun,
+      questRunPackId: 'starter',
+      questRunStageId: 's07',
+      questRunLevelNumber: 7,
+    );
+    final restored = roundTrip(data);
+
+    expect(restored.questRunPackId, 'starter');
+    expect(restored.questRunStageId, 's07');
+    expect(restored.questRunLevelNumber, 7);
+    expect(restored.questRun, isNotNull);
+    expect(restored.questRun!.score, 120);
+    expect(restored.questRun!.gemGoal, {
+      GemColor.red: 5,
+      GemColor.blue: 5,
+      GemColor.green: 5,
+    });
+    expect(restored.questRun!.gemsCollected, {GemColor.red: 2});
+  });
+
+  test('clearing the quest run drops all of its fields', () {
+    final data = SaveData(
+      questRun: GameEngine.newGame(1),
+      questRunPackId: 'starter',
+      questRunStageId: 's01',
+      questRunLevelNumber: 1,
+    );
+    final cleared = data.copyWith(clearQuestRun: true);
+    expect(cleared.questRun, isNull);
+    expect(cleared.questRunPackId, isNull);
+    expect(cleared.questRunStageId, isNull);
+    expect(cleared.questRunLevelNumber, isNull);
+    // And a run-free save omits the keys entirely.
+    expect(roundTrip(cleared).questRun, isNull);
+  });
+
   test('unknown save version throws instead of silently loading', () {
     expect(
       () => SaveData.fromJson(const {'version': 999}),

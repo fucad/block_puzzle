@@ -82,10 +82,16 @@ class ClassicGameController extends Notifier<GameState?> {
       save.recordClassicRunEnd(
         score: outcome.state.score,
         bestCombo: outcome.state.roundBestCombo,
+        allClears: outcome.state.allClears,
       );
     } else {
       save.storeClassicRun(outcome.state, _seed!);
     }
+    // Record per-placement lifetime stats (blocks placed, combo streak).
+    save.recordPlacement(
+      cellsPlaced: outcome.events.cellsPlaced,
+      comboIncreased: outcome.state.combo > 0,
+    );
     return outcome;
   }
 

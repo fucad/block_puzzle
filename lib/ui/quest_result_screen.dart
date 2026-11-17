@@ -1,18 +1,19 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/quest.dart';
+import '../state/providers.dart';
 import '../state/quest_game_controller.dart';
 import '../state/quest_providers.dart';
+import 'block_art.dart';
 import 'quest_screen.dart';
 
-/// Stage outcome. Win: "Level Complete!" + back to the map. Lose: the
-/// reference "So Close!" screen — progress toward the goal, Retry, back.
-/// Replaces the QuestScreen route; Retry pushes a fresh one.
+/// Stage outcome. Win → dramatic fanfare. Lose → progress recap + Retry.
 class QuestResultScreen extends ConsumerWidget {
   const QuestResultScreen({super.key, this.praise});
 
-  /// Praise carried over from the winning combo (shown under the title).
   final String? praise;
 
   @override
@@ -21,101 +22,116 @@ class QuestResultScreen extends ConsumerWidget {
     if (run == null) return const SizedBox.shrink();
     final won = run.status == QuestStatus.won;
 
+    // Detect pack completion — all stages in this pack are now done.
+    final save = ref.watch(saveDataProvider);
+    final isPackComplete =
+        won &&
+        (save.questCompleted[run.pack.id]?.length ?? 0) >=
+            run.pack.stages.length;
+
     return Scaffold(
       body: DecoratedBox(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF2D7DD2), Color(0xFF1B4E9B)],
+            colors: won
+                ? const [Color(0xFF1A3A1A), Color(0xFF0A1F0A)]
+                : const [Color(0xFF2D7DD2), Color(0xFF1B4E9B)],
           ),
         ),
         child: SafeArea(
-          child: Column(
+          child: Stack(
             children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  onPressed: () => _backToMap(context, ref),
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                  color: Colors.white70,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                won ? 'Level Complete!' : 'So Close!',
-                style: const TextStyle(
-                  fontSize: 44,
-                  fontWeight: FontWeight.w900,
-                  color: Color(0xFF9BDCFF),
-                  shadows: [Shadow(color: Colors.black26, blurRadius: 8)],
-                ),
-              ),
-              if (won && praise != null) ...[
-                const SizedBox(height: 12),
-                _AnimatedPraise(text: praise!),
-              ],
-              const Spacer(),
-              if (won)
-                const Icon(
-                  Icons.emoji_events,
-                  size: 96,
-                  color: Color(0xFFFFD54F),
-                )
-              else
-                _ProgressRecap(run: run),
-              const Spacer(flex: 2),
-              if (!won)
-                SizedBox(
-                  width: 240,
-                  height: 60,
-                  child: FilledButton.icon(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF43A047),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    onPressed: () {
-                      ref.read(questGameProvider.notifier).retry();
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => const QuestScreen()),
-                      );
-                    },
-                    icon: const Icon(Icons.refresh_rounded, size: 30),
-                    label: const Text(
-                      'Retry',
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w800,
-                      ),
+              if (won) const _ConfettiLayer(),
+              if (isPackComplete) const _BlockBurstLayer(),
+              Column(
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: IconButton(
+                      onPressed: () => _backToMap(context, ref),
+                      icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                      color: Colors.white70,
                     ),
                   ),
-                )
-              else
-                SizedBox(
-                  width: 240,
-                  height: 60,
-                  child: FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFF2A93B),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
+                  const Spacer(),
+                  if (won) ...[
+                    _WinContent(
+                      praise: praise,
+                      levelNumber: run.levelNumber,
+                      isPackComplete: isPackComplete,
+                      packTitle: run.pack.title,
                     ),
-                    onPressed: () => _backToMap(context, ref),
-                    child: const Text(
-                      'Continue',
+                  ] else ...[
+                    const Text(
+                      'So Close!',
                       style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
+                        fontSize: 44,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF9BDCFF),
+                        shadows: [Shadow(color: Colors.black26, blurRadius: 8)],
                       ),
                     ),
-                  ),
-                ),
-              const Spacer(),
+                    const SizedBox(height: 24),
+                    _ProgressRecap(run: run),
+                  ],
+                  const Spacer(flex: 2),
+                  if (!won)
+                    SizedBox(
+                      width: 240,
+                      height: 60,
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFF43A047),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        onPressed: () {
+                          ref.read(questGameProvider.notifier).retry();
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const QuestScreen(),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.refresh_rounded, size: 30),
+                        label: const Text(
+                          'Retry',
+                          style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    SizedBox(
+                      width: 240,
+                      height: 60,
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFFF2A93B),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        onPressed: () => _backToMap(context, ref),
+                        child: Text(
+                          isPackComplete ? 'Claim Treasure' : 'Continue',
+                          style: const TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  const Spacer(),
+                ],
+              ),
             ],
           ),
         ),
@@ -126,7 +142,6 @@ class QuestResultScreen extends ConsumerWidget {
   void _backToMap(BuildContext context, WidgetRef ref) {
     final run = ref.read(questGameProvider);
     if (run != null && run.status == QuestStatus.won) {
-      // Tell the map to animate the advance to the next stage.
       ref.read(questJustCompletedProvider.notifier).set(run.levelNumber);
     }
     ref.read(questGameProvider.notifier).quit();
@@ -134,10 +149,336 @@ class QuestResultScreen extends ConsumerWidget {
   }
 }
 
-/// "Score: how far you got" for score goals; gem tally otherwise.
+// ── Win content ──────────────────────────────────────────────────────────────
+
+class _WinContent extends StatefulWidget {
+  const _WinContent({
+    this.praise,
+    required this.levelNumber,
+    required this.isPackComplete,
+    required this.packTitle,
+  });
+  final String? praise;
+  final int levelNumber;
+  final bool isPackComplete;
+  final String packTitle;
+
+  @override
+  State<_WinContent> createState() => _WinContentState();
+}
+
+class _WinContentState extends State<_WinContent>
+    with TickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..forward();
+
+  // Secondary element bounces in after a short delay.
+  late final AnimationController _levelAnim = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 700),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 200), () {
+      if (mounted) _levelAnim.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    _levelAnim.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.isPackComplete ? _buildPackComplete() : _buildLevelComplete();
+  }
+
+  // ── Whole pack cleared: the big hurray ──────────────────────────────────
+  Widget _buildPackComplete() {
+    final bounce = CurvedAnimation(parent: _c, curve: Curves.elasticOut);
+    final fade = CurvedAnimation(parent: _c, curve: Curves.easeIn);
+    final chestPop = CurvedAnimation(
+      parent: _levelAnim,
+      curve: Curves.elasticOut,
+    );
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ScaleTransition(
+          scale: bounce,
+          child: const BlockArt(grid: BlockGlyphs.chestOpen, cell: 20, gap: 2),
+        ),
+        const SizedBox(height: 20),
+        ScaleTransition(
+          scale: chestPop,
+          child: ShaderMask(
+            shaderCallback: (r) => const LinearGradient(
+              colors: [Color(0xFFFFE082), Color(0xFFF2A93B)],
+            ).createShader(r),
+            child: const Text(
+              'PACK COMPLETE!',
+              style: TextStyle(
+                fontSize: 38,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                letterSpacing: 1,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        FadeTransition(
+          opacity: fade,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0x33FFE082),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              '🎉  “${widget.packTitle}” cleared!',
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFFFFE082),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        FadeTransition(
+          opacity: fade,
+          child: const Text(
+            'Every level beaten — a treasure is yours.\nWatch for new packs on the map!',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 14, color: Colors.white70, height: 1.4),
+          ),
+        ),
+        const SizedBox(height: 20),
+        FadeTransition(opacity: fade, child: const _StarRow()),
+      ],
+    );
+  }
+
+  // ── Single level cleared ────────────────────────────────────────────────
+  Widget _buildLevelComplete() {
+    final bounce = CurvedAnimation(parent: _c, curve: Curves.elasticOut);
+    final fade = CurvedAnimation(parent: _c, curve: Curves.easeIn);
+    final levelBounce = CurvedAnimation(
+      parent: _levelAnim,
+      curve: Curves.elasticOut,
+    );
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ScaleTransition(
+          scale: bounce,
+          child: const BlockArt(grid: BlockGlyphs.trophy, cell: 16, gap: 2),
+        ),
+        const SizedBox(height: 18),
+        // "Level X" with animated number, then "Complete!" fades in below.
+        FadeTransition(
+          opacity: fade,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              const Text(
+                'Level ',
+                style: TextStyle(
+                  fontSize: 36,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFFFFE082),
+                ),
+              ),
+              ScaleTransition(
+                scale: levelBounce,
+                child: Text(
+                  '${widget.levelNumber}',
+                  style: const TextStyle(
+                    fontSize: 52,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFFF2C94C),
+                    height: 1,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 2),
+        FadeTransition(
+          opacity: fade,
+          child: const Text(
+            'Complete!',
+            style: TextStyle(
+              fontSize: 36,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFFFFE082),
+              letterSpacing: 1,
+            ),
+          ),
+        ),
+        if (widget.praise != null) ...[
+          const SizedBox(height: 14),
+          FadeTransition(
+            opacity: fade,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0x33FFE082),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                widget.praise!,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  color: Color(0xFFFFE082),
+                ),
+              ),
+            ),
+          ),
+        ],
+        const SizedBox(height: 24),
+        FadeTransition(opacity: fade, child: const _StarRow()),
+      ],
+    );
+  }
+}
+
+class _StarRow extends StatelessWidget {
+  const _StarRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text('⭐', style: TextStyle(fontSize: 36)),
+        SizedBox(width: 8),
+        Text('⭐', style: TextStyle(fontSize: 44)),
+        SizedBox(width: 8),
+        Text('⭐', style: TextStyle(fontSize: 36)),
+      ],
+    );
+  }
+}
+
+// ── Confetti ─────────────────────────────────────────────────────────────────
+
+class _ConfettiLayer extends StatefulWidget {
+  const _ConfettiLayer();
+
+  @override
+  State<_ConfettiLayer> createState() => _ConfettiLayerState();
+}
+
+class _ConfettiLayerState extends State<_ConfettiLayer>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2800),
+  )..forward();
+
+  static final _rng = Random(42);
+  static final _pieces = List.generate(40, (_) {
+    return _Confetto(
+      x: _rng.nextDouble(),
+      startY: -0.05 - _rng.nextDouble() * 0.2,
+      speed: 0.5 + _rng.nextDouble() * 0.5,
+      angle: _rng.nextDouble() * pi * 2,
+      spin: (_rng.nextDouble() - 0.5) * 6,
+      size: 6 + _rng.nextDouble() * 8,
+      color: [
+        const Color(0xFFF2C94C),
+        const Color(0xFFEB5757),
+        const Color(0xFF56CCF2),
+        const Color(0xFF6FCF97),
+        const Color(0xFFBB6BFF),
+        const Color(0xFFFF8A00),
+      ][_rng.nextInt(6)],
+    );
+  });
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (_, _) => CustomPaint(
+        size: size,
+        painter: _ConfettiPainter(pieces: _pieces, t: _c.value),
+      ),
+    );
+  }
+}
+
+class _Confetto {
+  const _Confetto({
+    required this.x,
+    required this.startY,
+    required this.speed,
+    required this.angle,
+    required this.spin,
+    required this.size,
+    required this.color,
+  });
+  final double x, startY, speed, angle, spin, size;
+  final Color color;
+}
+
+class _ConfettiPainter extends CustomPainter {
+  const _ConfettiPainter({required this.pieces, required this.t});
+  final List<_Confetto> pieces;
+  final double t;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    for (final p in pieces) {
+      final y = p.startY + t * p.speed * 1.3;
+      if (y > 1.1) continue;
+      final px = p.x * size.width + sin(t * 3 + p.angle) * 18;
+      final py = y * size.height;
+      canvas.save();
+      canvas.translate(px, py);
+      canvas.rotate(t * p.spin);
+      canvas.drawRect(
+        Rect.fromCenter(
+          center: Offset.zero,
+          width: p.size,
+          height: p.size * 0.55,
+        ),
+        Paint()..color = p.color.withValues(alpha: (1 - t * 0.6).clamp(0, 1)),
+      );
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ConfettiPainter old) => old.t != t;
+}
+
+// ── Lose: progress recap ─────────────────────────────────────────────────────
+
 class _ProgressRecap extends StatelessWidget {
   const _ProgressRecap({required this.run});
-
   final QuestRun run;
 
   @override
@@ -146,7 +487,7 @@ class _ProgressRecap extends StatelessWidget {
     return Column(
       children: [
         const Text(
-          'Score',
+          'Progress',
           style: TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w700,
@@ -170,7 +511,7 @@ class _ProgressRecap extends StatelessWidget {
         const SizedBox(height: 10),
         Text(
           switch (goal) {
-            ScoreGoal(target: final t) => '${run.game.score} / $t',
+            ScoreGoal(target: final t) => '${run.game.score} / $t points',
             GemsGoal() => '${(run.progress * 100).round()}% of gems',
           },
           style: const TextStyle(
@@ -184,23 +525,42 @@ class _ProgressRecap extends StatelessWidget {
   }
 }
 
-/// Praise text that pops in with a scale+fade (matches the in-game popup
-/// feel) rather than appearing as plain text.
-class _AnimatedPraise extends StatefulWidget {
-  const _AnimatedPraise({required this.text});
+// ── Block burst (pack complete) ───────────────────────────────────────────────
 
-  final String text;
+class _BlockBurstLayer extends StatefulWidget {
+  const _BlockBurstLayer();
 
   @override
-  State<_AnimatedPraise> createState() => _AnimatedPraiseState();
+  State<_BlockBurstLayer> createState() => _BlockBurstLayerState();
 }
 
-class _AnimatedPraiseState extends State<_AnimatedPraise>
+class _BlockBurstLayerState extends State<_BlockBurstLayer>
     with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 500),
+    duration: const Duration(milliseconds: 1800),
   )..forward();
+
+  static final _rng = Random(13);
+  static final _blocks = List.generate(28, (_) {
+    final angle = _rng.nextDouble() * pi * 2;
+    return _BurstBlock(
+      angle: angle,
+      speed: 0.4 + _rng.nextDouble() * 0.6,
+      size: 10.0 + _rng.nextDouble() * 10,
+      color: [
+        const Color(0xFFFF2E2E),
+        const Color(0xFF2FD048),
+        const Color(0xFFFF8A00),
+        const Color(0xFFFFCE00),
+        const Color(0xFF2B82FF),
+        const Color(0xFFA43BFF),
+        const Color(0xFF12CFEF),
+        const Color(0xFFFF52AE),
+      ][_rng.nextInt(8)],
+      delay: _rng.nextDouble() * 0.15,
+    );
+  });
 
   @override
   void dispose() {
@@ -210,21 +570,58 @@ class _AnimatedPraiseState extends State<_AnimatedPraise>
 
   @override
   Widget build(BuildContext context) {
-    final scale = CurvedAnimation(parent: _c, curve: Curves.easeOutBack);
-    return ScaleTransition(
-      scale: scale,
-      child: FadeTransition(
-        opacity: _c,
-        child: Text(
-          widget.text,
-          style: const TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.w900,
-            color: Color(0xFFFFE082),
-            shadows: [Shadow(color: Colors.black38, blurRadius: 8)],
-          ),
-        ),
+    final size = MediaQuery.of(context).size;
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (_, _) => CustomPaint(
+        size: size,
+        painter: _BlockBurstPainter(blocks: _blocks, t: _c.value),
       ),
     );
   }
+}
+
+class _BurstBlock {
+  const _BurstBlock({
+    required this.angle,
+    required this.speed,
+    required this.size,
+    required this.color,
+    required this.delay,
+  });
+  final double angle, speed, size, delay;
+  final Color color;
+}
+
+class _BlockBurstPainter extends CustomPainter {
+  const _BlockBurstPainter({required this.blocks, required this.t});
+  final List<_BurstBlock> blocks;
+  final double t;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cx = size.width / 2;
+    final cy = size.height * 0.38;
+    for (final b in blocks) {
+      final progress = ((t - b.delay) / (1 - b.delay)).clamp(0.0, 1.0);
+      if (progress <= 0) continue;
+      final dist = progress * b.speed * size.shortestSide * 0.55;
+      final px = cx + cos(b.angle) * dist;
+      final py = cy + sin(b.angle) * dist + progress * progress * 90;
+      canvas.save();
+      canvas.translate(px, py);
+      canvas.rotate(progress * 3.5 * (b.angle > pi ? -1 : 1));
+      canvas.drawRect(
+        Rect.fromCenter(center: Offset.zero, width: b.size, height: b.size),
+        Paint()
+          ..color = b.color.withValues(
+            alpha: (1 - progress * 0.75).clamp(0, 1),
+          ),
+      );
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(_BlockBurstPainter old) => old.t != t;
 }
